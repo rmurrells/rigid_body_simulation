@@ -1,0 +1,16 @@
+[package]
+name = "rigid_body_sdl"
+version = "0.1.0"
+authors = ["bobby"]
+edition = "2018"
+
+[dependencies]
+sdl2 = "0.33"
+rigid_body_core = {path = "../rigid_body_core"}
+
+[dev-dependencies]
+criterion = "0.3"
+
+[[bench]]
+name = "my_benchmark"
+harness = false

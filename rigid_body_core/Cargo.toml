@@ -1,0 +1,8 @@
+[package]
+name = "rigid_body_core"
+version = "0.1.0"
+authors = ["bobby"]
+edition = "2018"
+
+[dependencies]
+rustc-hash = "1.1.0"

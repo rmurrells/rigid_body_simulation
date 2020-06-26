@@ -1,0 +1,9 @@
+*~
+*#
+*.dll
+*.lib
+*.log
+
+node_modules/
+pkg/
+target/
