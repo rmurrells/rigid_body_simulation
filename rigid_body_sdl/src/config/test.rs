@@ -14,7 +14,7 @@ use std::f64::consts::PI;
 
 pub fn immovable() -> StrResult<RigidBodySimulationSDL> {
     let mut rigid_body_simulation = RigidBodySimulationSDL::new()?;
-    rigid_body_simulation.camera().position = Vector3d::new(0., 0., -10.);
+    rigid_body_simulation.camera_mut().position = Vector3d::new(0., 0., -10.);
 
     let mass_inv = 1.;
     
@@ -93,7 +93,7 @@ pub fn icosphere(sd: u8) -> StrResult<RigidBodySimulationSDL> {
 
 pub fn coincident() -> StrResult<RigidBodySimulationSDL> {
     let mut rigid_body_simulation = RigidBodySimulationSDL::new()?;
-    rigid_body_simulation.camera().position = Vector3d::new(0., 0., -30.);
+    rigid_body_simulation.camera_mut().position = Vector3d::new(0., 0., -30.);
     let dim = Vector3d::new(5., 5., 5.);
     rigid_body_simulation.add_rigid_body(
 	RigidBody::cuboid(
@@ -128,7 +128,7 @@ pub fn coincident() -> StrResult<RigidBodySimulationSDL> {
 
 pub fn bounding_box() -> StrResult<RigidBodySimulationSDL> {
     let mut rigid_body_simulation = RigidBodySimulationSDL::new()?;
-    rigid_body_simulation.camera().position = Vector3d::new(0., 0., -30.);
+    rigid_body_simulation.camera_mut().position = Vector3d::new(0., 0., -30.);
 
     let radius = 2.25;
     let mass_inv = 1.;

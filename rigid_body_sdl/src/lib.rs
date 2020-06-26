@@ -13,13 +13,14 @@ use input::{
     Input,
     InputState,
 };
-use render::Renderer;
+use render::RendererSDL;
 use rigid_body_core::{
     math::vector::Vector3d,
     mesh::Mesh,
     render::{
 	Camera,
 	Color,
+	Renderer,
     },
     rigid_body::RigidBody,
     RigidBodySimulation,
@@ -37,7 +38,7 @@ pub struct RigidBodySimulationSDL {
     advance_simulation: bool,
     tick: bool,
     simulation: RigidBodySimulation,
-    renderer: Renderer,
+    renderer: RendererSDL,
     input: Input,
     camera_mover: CameraMover,
     fps_manager_opt: Option<FPSManager>,
@@ -52,7 +53,7 @@ impl RigidBodySimulationSDL {
 	    advance_simulation: true,
 	    tick: true,
 	    simulation: RigidBodySimulation::new(),
-	    renderer: Renderer::new(
+	    renderer: RendererSDL::new(
 		&context, "RigidBodySimulationSDL", (800, 600),
 	    )?,
 	    input: Input::new(&context)?,
@@ -79,8 +80,8 @@ impl RigidBodySimulationSDL {
 	}
     }
 
-    pub fn camera(&mut self) -> &mut Camera {
-	self.renderer.camera()
+    pub fn camera_mut(&mut self) -> &mut Camera {
+	self.renderer.camera_mut()
     }
     
     pub fn set_fps(&mut self, fps: u64) {
@@ -101,7 +102,7 @@ impl RigidBodySimulationSDL {
 	    InputState::Reset => self.simulation.reset(),
 	    InputState::Tick => self.tick = true,
 	}
-	self.camera_mover.move_camera(&self.input, self.renderer.camera());
+	self.camera_mover.move_camera(&self.input, self.renderer.camera_mut());
 	if self.advance_simulation || self.tick {
 	    self.simulation.tick(
 		if let Some(fps_manager) = &mut self.fps_manager_opt {

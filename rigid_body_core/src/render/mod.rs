@@ -1,17 +1,26 @@
 mod camera;
+mod draw_3d;
 mod render_object_creator;
 mod screen_buffer;
 
 use crate::{
     math::{
+	matrix_vector,
 	matrix::Matrix3x3,
 	polyhedron::Polyhedron,
+	rotation_matrix,
 	vector::Vector3d,
     },
     mesh::Mesh,
+    SeparatingPlane,
+    simulation::{
+	rigid_body::RigidBody,
+	RigidBodySimulation,
+    },
+    utility::int_hash::IntMap,
+    UID,
 };
-use render_object_creator::RenderObjectCreator;
-use screen_buffer::ScreenBuffer;
+use draw_3d::Draw3d;
 use std::f64::consts::PI;
 pub use camera::Camera;
 pub use screen_buffer::{
@@ -19,53 +28,158 @@ pub use screen_buffer::{
     PIXEL_FORMAT,
 };
 
-pub struct Draw3d {
-    pub camera: Camera,
-    screen_buffer: ScreenBuffer,
-    render_object_creator: RenderObjectCreator,
+type MeshMap = IntMap<UID, (Mesh, Color)>;
+
+pub struct RendererImpl {
+    draw_3d: Draw3d,
+    mesh_map: MeshMap,
 }
 
-impl Draw3d {
+impl RendererImpl {
     pub fn new(window_size: (u32, u32)) -> Self {
 	Self {
-            camera: Camera::default(),
-            screen_buffer: ScreenBuffer::new(window_size),
-            render_object_creator: RenderObjectCreator::new(
-                window_size,
-                0.1,
-                20000.,
-                PI/2.,
-            ),
+	    draw_3d: Draw3d::new(window_size),
+	    mesh_map: MeshMap::default(),
 	}
     }
 
+    pub fn add_mesh(&mut self, uid: UID, mesh: Mesh, color: Color) {
+	self.mesh_map.insert(uid, (mesh, color));
+    }
+    
+    pub fn camera_mut(&mut self) -> &mut Camera {
+	&mut self.draw_3d.camera
+    }
+    
     pub fn clear(&mut self, color: Color) {
-	self.screen_buffer.clear(color);
+	self.draw_3d.clear(color);
     }
 
-    pub fn get_data(&mut self) -> &[u8] {
-	self.screen_buffer.get_data()
+    pub fn get_data(&self) -> &[u8] {
+	self.draw_3d.get_data()
     }
     
     pub fn get_data_mut(&mut self) -> &mut [u8] {
-	self.screen_buffer.get_data_mut()
+	self.draw_3d.get_data_mut()
     }
     
-    pub fn get_simple_light_color(
-	color: Color,
-	light: f64,
-    ) -> Color {
-	let light = -(light-1.)/2.;
-	(
-	    (color.0 as f64 * light) as u8,
-	    (color.1 as f64 * light) as u8,
-	    (color.2 as f64 * light) as u8,
-	)
+    pub fn set_window_size(
+	&mut self, window_size: (u32, u32),
+    ) {
+	self.draw_3d.set_window_size(window_size);
     }
 
-    pub fn set_window_size(&mut self, window_size: (u32, u32)) {
-	self.render_object_creator.set_window_size(window_size);
-	self.screen_buffer.resize(window_size);
+    pub fn render_rigid_bodies(&mut self, rigid_bodies: &[RigidBody]) {
+	for rigid_body in rigid_bodies {
+	    self.draw_rigid_body(rigid_body, None);	    
+	}
+    }
+    
+    pub fn render_rigid_bodies_debug(
+	&mut self, simulation: &RigidBodySimulation,
+    ) {
+	for (i, rigid_body) in simulation.rigid_bodies.iter().enumerate() {
+	    self.draw_rigid_body(
+		rigid_body,
+		Some(if simulation.collision_manager.is_colliding(i) {
+		    (255, 0, 0)
+		} else {
+		    (0, 255, 0)
+		}),
+	    );
+
+	    let bounding_box = rigid_body.bounding_box();
+	    self.draw_aligned_cuboid(
+		&bounding_box[0],
+		&bounding_box[1],
+		if simulation.collision_manager
+		    .is_bounding_box_colliding(i)
+		{
+		    (0, 0, 255)
+		} else {
+		    (0, 255, 0)
+		},
+	    );
+	}
+
+	let len = simulation.rigid_bodies.len();
+	for i in 1..len {
+	    for j in 0..i {
+		let collision_status = simulation
+		    .collision_manager
+		    .collision_table()
+		    .get(i, j);
+		if collision_status.bounding_box_collision() &&
+		    !collision_status.colliding
+		{
+		    match collision_status.separating_plane {
+			SeparatingPlane::Face{face_indices} => {
+			    let polyhedron = simulation
+				.rigid_bodies[face_indices.face_rigid_body]
+				.polyhedron_world();
+			    let edges = polyhedron.edges();
+			    let vertices = polyhedron.vertices();
+			    let separating_plane =
+				&polyhedron.faces()[face_indices.face];
+			    for edge_index in separating_plane.edge_indices() {
+				let edge = &edges[*edge_index];
+				self.draw_line(
+				    &vertices[edge.start_index()],
+				    &vertices[edge.end_index()],
+				    (255, 0, 0),
+				    true,
+				);
+			    }
+			    let mut avg = Vector3d::default();
+			    let vertex_indices =
+				separating_plane.vertex_indices();
+			    for vertex_index in vertex_indices {
+				avg.add_assign(&vertices[*vertex_index]);
+			    }
+			    avg.scale_assign(1./vertex_indices.len() as f64);
+			    self.draw_line(
+				&avg, &avg.add(separating_plane.direction()),
+				(255, 255, 255),
+				true,
+			    );
+			}
+			SeparatingPlane::Edge{edge_indices} => {
+			    let plane_polyhedron = simulation
+				.rigid_bodies[edge_indices.plane_rigid_body]
+				.polyhedron_world();
+			    let plane_vertices = plane_polyhedron.vertices();
+			    let plane_edge =
+				plane_polyhedron.edges()[edge_indices.plane_edge];
+			    
+			    let other_polyhedron = simulation
+				.rigid_bodies[edge_indices.other_rigid_body]
+				.polyhedron_world();
+			    let other_vertices = other_polyhedron.vertices();
+			    let other_edge =
+				other_polyhedron.edges()[edge_indices.other_edge];
+
+			    self.draw_edge_plane(
+				&plane_vertices[plane_edge.start_index()],
+				&plane_vertices[plane_edge.end_index()],
+				&edge_indices
+				    .plane_direction(&simulation.rigid_bodies)
+				    .unwrap(),
+				&other_vertices[other_edge.start_index()],
+				&other_vertices[other_edge.end_index()],
+			    );
+			    
+			    self.draw_line(
+				&other_vertices[other_edge.start_index()],
+				&other_vertices[other_edge.end_index()],
+				(255, 0, 0),
+				true,
+			    );
+			}
+			SeparatingPlane::None => unreachable!(),
+		    }
+		}
+	    }
+	}
     }
     
     pub fn draw_aligned_cuboid(
@@ -74,20 +188,7 @@ impl Draw3d {
 	max: &Vector3d,
 	color: Color,
     ) {
-	self.draw_line(min, &Vector3d::new(max[0], min[1], min[2]), color, false);
-	self.draw_line(&Vector3d::new(max[0], min[1], min[2]), &Vector3d::new(max[0], max[1], min[2]), color, false);
-	self.draw_line(&Vector3d::new(max[0], max[1], min[2]), &Vector3d::new(min[0], max[1], min[2]), color, false);
-	self.draw_line(&Vector3d::new(min[0], max[1], min[2]), min, color, false);
-
-	self.draw_line(&Vector3d::new(min[0], min[1], max[2]), &Vector3d::new(max[0], min[1], max[2]), color, false);
-	self.draw_line(&Vector3d::new(max[0], min[1], max[2]), max, color, false);
-	self.draw_line(max, &Vector3d::new(min[0], max[1], max[2]), color, false);
-	self.draw_line(&Vector3d::new(min[0], max[1], max[2]), &Vector3d::new(min[0], min[1], max[2]), color, false);
-
-	self.draw_line(min, &Vector3d::new(min[0], min[1], max[2]), color, false);
-	self.draw_line(&Vector3d::new(max[0], min[1], min[2]), &Vector3d::new(max[0], min[1], max[2]), color, false);
-	self.draw_line(&Vector3d::new(max[0], max[1], min[2]), max, color, false);
-	self.draw_line(&Vector3d::new(min[0], max[1], min[2]), &Vector3d::new(min[0], max[1], max[2]), color, false);
+	self.draw_3d.draw_aligned_cuboid(min, max, color);
     }
     
     pub fn draw_line(
@@ -97,15 +198,7 @@ impl Draw3d {
 	color: Color,
 	in_front: bool
     ) {
-	if let Some(window_line) = &self.render_object_creator.get_window_line(
-	    start, end, &self.camera,
-	) {
-	    self.screen_buffer.draw_clipped_line(
-		&window_line.finite_line_3d.start,
-		&window_line.finite_line_3d.end,
-		color, in_front,
-	    );
-	}
+	self.draw_3d.draw_line(start, end, color, in_front);
     }
     
     pub fn draw_mesh(
@@ -115,55 +208,17 @@ impl Draw3d {
 	world_orientation: &Matrix3x3,
 	color: Color,
     ) {
-	for window_triangle in self.render_object_creator.get_window_triangles(
-	    &mesh.mesh_triangles,
-	    world_position,
-	    world_orientation,
-	    &self.camera,
-	) {
-	    let color = Self::get_simple_light_color(
-		color, window_triangle.light_value,
-	    );
-	    self.screen_buffer.fill_triangle(
-		&window_triangle.triangle_3d, color,
-	    );
-	}
+	self.draw_3d.draw_mesh(mesh, world_position, world_orientation, color);
     }
 
-    pub fn draw_mesh_lines(
-	&mut self,
-	mesh: &Mesh,
-	world_position: &Vector3d,
-	world_orientation: &Matrix3x3,
-	color: Color,
-	in_front: bool,
-    ) {
-	for window_triangle in self.render_object_creator.get_window_triangles(
-	    &mesh.mesh_triangles,
-	    world_position,
-	    world_orientation,
-	    &self.camera,
-	) {
-	    self.screen_buffer.draw_triangle_lines(
-		&window_triangle.triangle_3d, color, in_front,
-	    );
-	}
-    }
-    
     pub fn draw_polyhedron_wire_frame(
 	&mut self,
 	polyhedron: &Polyhedron,
 	color: Color,
     ) {
-	let vertices = polyhedron.vertices();
-	for edge in polyhedron.edges() {
-	    self.draw_line(
-		&vertices[edge.start_index()],
-		&vertices[edge.end_index()],
-		color,
-		false,
-	    );
-	}
+	self.draw_3d.draw_polyhedron_wire_frame(
+	    polyhedron, color,
+	);
     }
 
     pub fn draw_position(
@@ -171,12 +226,209 @@ impl Draw3d {
 	position: &Vector3d,
 	color: Color,
     ) {
-	if let Some(window_position) =
-	    &self.render_object_creator.get_window_pos(
-		position, &self.camera,
-	    )
-	{
-	    self.screen_buffer.draw_position(window_position, color);
+	self.draw_3d.draw_position(position, color);
+    }
+
+    pub fn draw_rigid_body_mesh_lines(
+	&mut self,
+	rigid_body: &RigidBody,
+	color_opt: Option<Color>,
+    ) {
+	Self::draw_mesh_triangles_impl(
+	    rigid_body, color_opt, &self.mesh_map, &mut self.draw_3d,
+	);
+    }
+    
+    pub fn draw_rigid_body(
+	&mut self,
+	rigid_body: &RigidBody,
+	color_opt: Option<Color>,
+    ) {
+	Self::draw_rigid_body_impl(
+	    rigid_body, color_opt, &self.mesh_map, &mut self.draw_3d,
+	);
+    }
+
+    fn draw_edge_plane(
+	&mut self,
+	plane_edge_start: &Vector3d,
+	plane_edge_end: &Vector3d,
+	plane_direction: &Vector3d,
+	other_edge_start: &Vector3d,
+	other_edge_end: &Vector3d,
+    ) {
+	self.draw_line(
+	    plane_edge_start, plane_edge_end, (255, 0, 0), true,
+	);
+	self.draw_line(
+	    plane_edge_start,
+	    &plane_edge_start.add(&other_edge_end.sub(other_edge_start)),
+	    (255, 0, 0), true,
+	);
+	self.draw_line(
+	    plane_edge_start, &plane_edge_start.add(plane_direction),
+	    (255, 255, 255), true,
+	);
+
+	let mut start = plane_edge_end.sub(plane_edge_start);
+	let mut end = matrix_vector::mult_3(
+	    &rotation_matrix::general(plane_direction, PI/2.),
+	    &start,
+	);
+	for _ in 0..4 {
+	    self.draw_line(
+		&start.add(plane_edge_start), &end.add(plane_edge_start),
+		(255, 255, 255), true,
+	    );
+	    start = end;
+	    end = matrix_vector::mult_3(
+		&rotation_matrix::general(plane_direction, PI/2.),
+		&start,
+	    );
 	}
     }
+    
+    fn draw_mesh_triangles_impl(
+	rigid_body: &RigidBody,
+	color_opt: Option<Color>,
+	mesh_map: &MeshMap,
+	draw_3d: &mut Draw3d,	
+    ) {
+	if let Some((mesh, mesh_color)) = mesh_map.get(&rigid_body.uid()) {
+	    draw_3d.draw_mesh_lines(
+		mesh,
+		&rigid_body.position,
+		rigid_body.rotation(),
+		*match &color_opt {
+		    Some(color) => color,
+		    None => mesh_color,
+		},
+		true,
+	    );
+	}
+    }
+    
+    fn draw_rigid_body_impl(
+	rigid_body: &RigidBody,
+	color_opt: Option<Color>,
+	mesh_map: &MeshMap,
+	draw_3d: &mut Draw3d,
+    ) {
+	match mesh_map.get(&rigid_body.uid()) {
+	    Some((mesh, mesh_color)) => draw_3d.draw_mesh(
+		mesh,
+		&rigid_body.position,
+		rigid_body.rotation(),
+		*match &color_opt {
+		    Some(color) => color,
+		    None => mesh_color,
+		}
+	    ),
+	    None => draw_3d.draw_polyhedron_wire_frame(
+		rigid_body.polyhedron_world(),
+		*match &color_opt {
+		    Some(color) => color,
+		    None => &(255, 0, 255),
+		}
+	    ),
+	}
+    }    
+}
+
+pub trait Renderer {
+    fn get(&self) -> &RendererImpl;
+    fn get_mut(&mut self) -> &mut RendererImpl;
+
+    fn get_data(&self) -> &[u8] {
+	self.get().get_data()
+    }
+    
+    fn get_data_mut(&mut self) -> &mut [u8] {
+	self.get_mut().get_data_mut()
+    }
+    
+    fn add_mesh(&mut self, uid: UID, mesh: Mesh, color: Color) {
+	self.get_mut().mesh_map.insert(uid, (mesh, color));
+    }
+    
+    fn camera_mut(&mut self) -> &mut Camera {
+	self.get_mut().camera_mut()
+    }
+    
+    fn clear(&mut self, color: Color) {
+	self.get_mut().clear(color);
+    }
+
+    fn render_rigid_bodies(&mut self, rigid_bodies: &[RigidBody]) {
+	self.get_mut().render_rigid_bodies(rigid_bodies);
+    }
+    
+    fn render_rigid_bodies_debug(
+	&mut self, simulation: &RigidBodySimulation,
+    ) {
+	self.get_mut().render_rigid_bodies_debug(simulation);
+    }
+    
+    fn draw_aligned_cuboid(
+	&mut self,
+	min: &Vector3d,
+	max: &Vector3d,
+	color: Color,
+    ) {
+	self.get_mut().draw_aligned_cuboid(min, max, color);
+    }
+    
+    fn draw_line(
+	&mut self,
+	start: &Vector3d,
+	end: &Vector3d,
+	color: Color,
+	in_front: bool
+    ) {
+	self.get_mut().draw_line(start, end, color, in_front);
+    }
+    
+    fn draw_mesh(
+	&mut self,
+	mesh: &Mesh,
+	world_position: &Vector3d,
+	world_orientation: &Matrix3x3,
+	color: Color,
+    ) {
+	self.get_mut().draw_mesh(mesh, world_position, world_orientation, color);
+    }
+
+    fn draw_polyhedron_wire_frame(
+	&mut self,
+	polyhedron: &Polyhedron,
+	color: Color,
+    ) {
+	self.get_mut().draw_polyhedron_wire_frame(
+	    polyhedron, color,
+	);
+    }
+
+    fn draw_position(
+	&mut self,
+	position: &Vector3d,
+	color: Color,
+    ) {
+	self.get_mut().draw_position(position, color);
+    }
+
+    fn draw_rigid_body_mesh_lines(
+	&mut self,
+	rigid_body: &RigidBody,
+	color_opt: Option<Color>,
+    ) {
+	self.get_mut().draw_rigid_body_mesh_lines(rigid_body, color_opt);
+    }
+    
+    fn draw_rigid_body(
+	&mut self,
+	rigid_body: &RigidBody,
+	color_opt: Option<Color>,
+    ) {
+	self.get_mut().draw_rigid_body(rigid_body, color_opt);
+    }    
 }
