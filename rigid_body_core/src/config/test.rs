@@ -6,6 +6,7 @@ use crate::{
 	vector::Vector3d,
     },
     mesh::polyhedron_meshes,
+    render::Color,
     RigidBody,
     RigidBodySimulation,
 };
@@ -26,7 +27,7 @@ pub fn immovable(rigid_body_simulation: &mut impl RigidBodySimulation) {
 	),
 	Some((
 	    polyhedron_meshes::cuboid(&dim),
-	    (0, 255, 0),
+	    Color::rgb(0, 255, 0),
 	)),
     );
 
@@ -62,7 +63,7 @@ pub fn icosphere(rigid_body_simulation: &mut impl RigidBodySimulation, sd: u8) {
 	),
  	Some((
 	    mesh.clone(),
-	    (0, 255, 0),
+	    Color::rgb(0, 255, 0),
 	)),
     );
     rigid_body_simulation.add_rigid_body(
@@ -77,7 +78,7 @@ pub fn icosphere(rigid_body_simulation: &mut impl RigidBodySimulation, sd: u8) {
 	),
  	Some((
 	    mesh,
-	    (0, 255, 0),
+	    Color::rgb(0, 255, 0),
 	)),
     );
 }
@@ -96,7 +97,7 @@ pub fn coincident(rigid_body_simulation: &mut impl RigidBodySimulation) {
 	),
 	Some((
 	    polyhedron_meshes::cuboid(&dim),
-	    (255, 0, 0),
+	    Color::rgb(255, 0, 0),
 	)),
     );
     rigid_body_simulation.add_rigid_body(
@@ -110,7 +111,7 @@ pub fn coincident(rigid_body_simulation: &mut impl RigidBodySimulation) {
 	),
 	Some((
 	    polyhedron_meshes::cuboid(&dim),
-	    (0, 255, 0),
+	    Color::rgb(0, 255, 0),
 	)),
     );
 }
@@ -131,7 +132,7 @@ pub fn bounding_box(rigid_body_simulation: &mut impl RigidBodySimulation) {
 	    let y = j as f64*10.-10.;
 	    for k in 0..3 {
 		let z = k as f64*10.-10.;
-		let color = (0, 255, 0);
+		let color = Color::rgb(0, 255, 0);
 		if j != 2 {
 		    let mesh = polyhedron_meshes::icosphere(radius, 0);
 		    rigid_body_simulation.add_rigid_body(
@@ -181,7 +182,7 @@ pub fn bounding_box(rigid_body_simulation: &mut impl RigidBodySimulation) {
 	),
 	Some((
 	    polyhedron_meshes::cuboid(&dim),
-	    (0, 255, 0),
+	    Color::rgb(0, 255, 0),
 	)),
     );    
     rigid_body_simulation.add_rigid_body(
@@ -195,7 +196,7 @@ pub fn bounding_box(rigid_body_simulation: &mut impl RigidBodySimulation) {
 	),
 	Some((
 	    polyhedron_meshes::cuboid(&dim),
-	    (0, 255, 0),
+	    Color::rgb(0, 255, 0),
 	)),
     );
     rigid_body_simulation.add_rigid_body(
@@ -209,7 +210,7 @@ pub fn bounding_box(rigid_body_simulation: &mut impl RigidBodySimulation) {
 	),
 	Some((
 	    polyhedron_meshes::cuboid(&dim),
-	    (0, 255, 0),
+	    Color::rgb(0, 255, 0),
 	)),
     );
     

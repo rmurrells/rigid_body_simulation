@@ -40,7 +40,9 @@ impl InputCore {
 		self.mouse_state.set(button, true),
 	    InputEvent::MouseButtonUp{button} =>
 		self.mouse_state.set(button, false),
-	    InputEvent::MouseMotion{xrel, yrel} => {
+	    InputEvent::MouseMotion{x, y, xrel, yrel} => {
+		self.mouse_state.x = x;
+		self.mouse_state.y = y;
 		self.mouse_state.xrel = xrel;
 		self.mouse_state.yrel = yrel;
 	    }
@@ -84,7 +86,7 @@ pub enum InputEvent {
     KeyUp{key: Keycode},
     MouseButtonDown{button: MouseButton},
     MouseButtonUp{button: MouseButton},
-    MouseMotion{xrel: i32, yrel: i32},
+    MouseMotion{x: i32, y: i32, xrel: i32, yrel: i32},
     MouseWheel{x: i32, y: i32},
     Quit,    
 }

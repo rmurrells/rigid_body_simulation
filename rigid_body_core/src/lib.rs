@@ -102,7 +102,7 @@ impl RigidBodySimulationCore {
     }
     
     fn render(&mut self) {
-	self.renderer.clear((0, 0, 0));
+	self.renderer.clear(Color::rgb(0, 0, 0));
 	if self.debug {
 	    self.renderer.render_rigid_bodies_debug(&self.simulation);
 	} else {

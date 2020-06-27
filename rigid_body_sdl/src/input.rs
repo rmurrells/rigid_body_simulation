@@ -37,8 +37,8 @@ impl InputSDL {
 		Event::MouseButtonUp{mouse_btn, ..} =>
 		    Self::match_button(mouse_btn)
 		    .map(|button| InputEvent::MouseButtonUp{button}),
-		Event::MouseMotion{xrel, yrel, ..} =>
-		    Some(InputEvent::MouseMotion{xrel, yrel}),
+		Event::MouseMotion{x, y, xrel, yrel, ..} =>
+		    Some(InputEvent::MouseMotion{x, y, xrel, yrel}),
 		Event::MouseWheel{x, y, ..} =>
 		    Some(InputEvent::MouseWheel{x, y}),
 		Event::Quit{..} => Some(InputEvent::Quit),

@@ -4,6 +4,7 @@
 *.lib
 *.log
 
+.bin/
 node_modules/
 pkg/
 target/

@@ -55,11 +55,11 @@ impl RendererCore {
 	self.draw_3d.clear(color);
     }
 
-    pub fn get_data(&self) -> &[u8] {
+    pub fn pixel_buffer(&self) -> &[u8] {
 	self.draw_3d.get_data()
     }
     
-    pub fn get_data_mut(&mut self) -> &mut [u8] {
+    pub fn pixel_buffer_mut(&mut self) -> &mut [u8] {
 	self.draw_3d.get_data_mut()
     }
     
@@ -82,9 +82,9 @@ impl RendererCore {
 	    self.draw_rigid_body(
 		rigid_body,
 		Some(if simulation.collision_manager.is_colliding(i) {
-		    (255, 0, 0)
+		    Color::rgb(255, 0, 0)
 		} else {
-		    (0, 255, 0)
+		    Color::rgb(0, 255, 0)
 		}),
 	    );
 
@@ -95,9 +95,9 @@ impl RendererCore {
 		if simulation.collision_manager
 		    .is_bounding_box_colliding(i)
 		{
-		    (0, 0, 255)
+		    Color::rgb(0, 0, 255)
 		} else {
-		    (0, 255, 0)
+		    Color::rgb(0, 255, 0)
 		},
 	    );
 	}
@@ -126,7 +126,7 @@ impl RendererCore {
 				self.draw_line(
 				    &vertices[edge.start_index()],
 				    &vertices[edge.end_index()],
-				    (255, 0, 0),
+				    Color::rgb(255, 0, 0),
 				    true,
 				);
 			    }
@@ -139,7 +139,7 @@ impl RendererCore {
 			    avg.scale_assign(1./vertex_indices.len() as f64);
 			    self.draw_line(
 				&avg, &avg.add(separating_plane.direction()),
-				(255, 255, 255),
+				Color::rgb(255, 255, 255),
 				true,
 			    );
 			}
@@ -171,7 +171,7 @@ impl RendererCore {
 			    self.draw_line(
 				&other_vertices[other_edge.start_index()],
 				&other_vertices[other_edge.end_index()],
-				(255, 0, 0),
+				Color::rgb(255, 0, 0),
 				true,
 			    );
 			}
@@ -258,16 +258,16 @@ impl RendererCore {
 	other_edge_end: &Vector3d,
     ) {
 	self.draw_line(
-	    plane_edge_start, plane_edge_end, (255, 0, 0), true,
+	    plane_edge_start, plane_edge_end, Color::rgb(255, 0, 0), true,
 	);
 	self.draw_line(
 	    plane_edge_start,
 	    &plane_edge_start.add(&other_edge_end.sub(other_edge_start)),
-	    (255, 0, 0), true,
+	    Color::rgb(255, 0, 0), true,
 	);
 	self.draw_line(
 	    plane_edge_start, &plane_edge_start.add(plane_direction),
-	    (255, 255, 255), true,
+	    Color::rgb(255, 255, 255), true,
 	);
 
 	let mut start = plane_edge_end.sub(plane_edge_start);
@@ -278,7 +278,7 @@ impl RendererCore {
 	for _ in 0..4 {
 	    self.draw_line(
 		&start.add(plane_edge_start), &end.add(plane_edge_start),
-		(255, 255, 255), true,
+		Color::rgb(255, 255, 255), true,
 	    );
 	    start = end;
 	    end = matrix_vector::mult_3(
@@ -328,7 +328,7 @@ impl RendererCore {
 		rigid_body.polyhedron_world(),
 		*match &color_opt {
 		    Some(color) => color,
-		    None => &(255, 0, 255),
+		    None => &Color{r: 255, g: 0, b: 255, a: 255},
 		}
 	    ),
 	}

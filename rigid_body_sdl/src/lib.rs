@@ -55,7 +55,7 @@ impl RigidBodySimulationSDL {
 	self.input.get(&mut self.rigid_body_simulation_core.input);
 	if !self.rigid_body_simulation_core.tick() {return Ok(false);}
 	self.renderer.present(
-	    self.rigid_body_simulation_core.renderer.get_data_mut(),
+	    self.rigid_body_simulation_core.renderer.pixel_buffer_mut(),
 	)?;
 	Ok(true)
     }

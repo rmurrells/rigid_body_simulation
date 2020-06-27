@@ -49,16 +49,16 @@ impl RendererSDL {
 	Ok(())
     }
 
-    pub fn present(&mut self, data: &mut [u8]) -> StrResult<()> {
+    pub fn present(&mut self, pixel_buffer: &mut [u8]) -> StrResult<()> {
 	let (width, height) = self.canvas.window().size();
 	self.canvas.copy(
 	    &self.texture_creator
 		.create_texture_from_surface(
 		    Surface::from_data(
-			data,
+			pixel_buffer,
 			width, height,
 			width*PIXEL_FORMAT as u32,
-			PixelFormatEnum::RGB24,
+			PixelFormatEnum::RGBA32,
 		    )?,
 		).map_err(|e| e.to_string())?,
 	    None, None, 

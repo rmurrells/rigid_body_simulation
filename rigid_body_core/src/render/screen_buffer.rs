@@ -7,9 +7,24 @@ use std::{
     mem,
 };
 
-pub const PIXEL_FORMAT: usize = 3;
+pub const PIXEL_FORMAT: usize = 4;
 
-pub type Color = (u8, u8, u8);
+#[derive(Clone, Copy)]
+pub struct Color {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+    pub a: u8,
+}
+
+impl Color {
+    pub fn rgb(r: u8, g: u8, b: u8) -> Self {
+	Self{r, g, b, a: 255}
+    }
+    pub fn rgba(r: u8, g: u8, b: u8, a: u8) -> Self {
+	Self{r, g, b, a}
+    }
+}
 
 pub struct ScreenBuffer {
     window_size: (u32, u32),
@@ -28,11 +43,8 @@ impl ScreenBuffer {
     }
 
     pub fn clear(&mut self, color: Color) {
-	for i in 0..self.data.len()/3 {
-	    let index = i*PIXEL_FORMAT;
-	    self.data[index] = color.0;
-	    self.data[index+1] = color.1;
-	    self.data[index+2] = color.2;	    
+	for i in 0..self.data.len()/PIXEL_FORMAT {
+	    self.fill_pixel(i, color);
 	}
 	self.depth.iter_mut().for_each(|e| *e = 0.);
     }
@@ -170,22 +182,19 @@ impl ScreenBuffer {
 	    }
 	}
     }
-
+    
     pub fn fill_point(
 	&mut self,
 	x: u32, y: u32,
 	depth: f64,
-	color: (u8, u8, u8),
+	color: Color,
     ) {
 	if x > self.window_size.0-1 || y > self.window_size.1-1 {return;}
-	let mut index = (x+y*self.window_size.0) as usize;
+	let index = (x+y*self.window_size.0) as usize;
 	let buffer_depth = &mut self.depth[index];
 	if depth > *buffer_depth {
-	    index *= PIXEL_FORMAT;
-	    self.data[index] = color.0;
-	    self.data[index+1] = color.1;
-	    self.data[index+2] = color.2;
 	    *buffer_depth = depth;
+	    self.fill_pixel(index, color);
 	}
     }
 
@@ -238,6 +247,14 @@ impl ScreenBuffer {
 	fill_half(vertex_2.y, vertex_3.y, &line_23, &line_13);
     }
 
+    fn fill_pixel(&mut self, mut index: usize, color: Color) {
+	index *= PIXEL_FORMAT;
+	self.data[index] = color.r;
+	self.data[index+1] = color.g;
+	self.data[index+2] = color.b;
+	self.data[index+3] = color.a;
+    }
+    
     fn get_y_sorted_vertices(
 	triangle: &Triangle3d,
     ) -> (Vertex, Vertex, Vertex) {

@@ -53,10 +53,10 @@ impl Draw3d {
 	light: f64,
     ) -> Color {
 	let light = -(light-1.)/2.;
-	(
-	    (color.0 as f64 * light) as u8,
-	    (color.1 as f64 * light) as u8,
-	    (color.2 as f64 * light) as u8,
+	Color::rgb(
+	    (color.r as f64 * light) as u8,
+	    (color.g as f64 * light) as u8,
+	    (color.b as f64 * light) as u8,
 	)
     }
 
