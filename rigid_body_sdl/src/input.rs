@@ -40,7 +40,7 @@ impl InputSDL {
 		Event::MouseMotion{x, y, xrel, yrel, ..} =>
 		    Some(InputEvent::MouseMotion{x, y, xrel, yrel}),
 		Event::MouseWheel{x, y, ..} =>
-		    Some(InputEvent::MouseWheel{x, y}),
+		    Some(InputEvent::MouseWheel{xrel: x, yrel: y}),
 		Event::Quit{..} => Some(InputEvent::Quit),
 		_ => None,
 	    } {

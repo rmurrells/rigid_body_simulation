@@ -47,6 +47,10 @@ document.addEventListener('mouseup', function(e) {
     rigid_body_wasm.on_mouse_button(e.button, false);
 });
 
+canvas.addEventListener('wheel', function(e) {
+    rigid_body_wasm.on_mouse_wheel(e.deltaX, e.deltaY);
+});
+
 canvas.addEventListener('mousemove', function(e) {
     const rect = canvas.getBoundingClientRect();
     rigid_body_wasm.on_mouse_move(

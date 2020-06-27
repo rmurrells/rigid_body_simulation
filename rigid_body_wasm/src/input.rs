@@ -44,3 +44,7 @@ pub fn mouse_move(x: i32, y: i32, input_core: &mut InputCore) {
     let yrel = y-mouse_state.y;
     input_core.handle_event(InputEvent::MouseMotion{x, y, xrel, yrel});
 }
+
+pub fn mouse_wheel(xrel: i32, yrel: i32, input_core: &mut InputCore) {
+    input_core.handle_event(InputEvent::MouseWheel{xrel, yrel: -yrel});
+}

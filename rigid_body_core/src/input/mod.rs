@@ -46,9 +46,9 @@ impl InputCore {
 		self.mouse_state.xrel = xrel;
 		self.mouse_state.yrel = yrel;
 	    }
-	    InputEvent::MouseWheel{x, y} => {
-                self.mouse_state.wheel_x = x;
-		self.mouse_state.wheel_y = y;
+	    InputEvent::MouseWheel{xrel, yrel} => {
+                self.mouse_state.wheel_x = xrel;
+		self.mouse_state.wheel_y = yrel;
 	    }
 	    InputEvent::Quit => self.quit = true,
 	}
@@ -87,6 +87,6 @@ pub enum InputEvent {
     MouseButtonDown{button: MouseButton},
     MouseButtonUp{button: MouseButton},
     MouseMotion{x: i32, y: i32, xrel: i32, yrel: i32},
-    MouseWheel{x: i32, y: i32},
+    MouseWheel{xrel: i32, yrel: i32},
     Quit,    
 }

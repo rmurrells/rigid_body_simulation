@@ -46,9 +46,9 @@ fn get_new_uid() -> UID {
 pub struct RigidBodySimulationCore {
     pub debug: bool,
     pub input: InputCore,
+    pub camera_mover: CameraMover,
     pub renderer: RendererCore,
     simulation: Simulation,
-    camera_mover: CameraMover,
     fps_manager_opt: Option<FPSManager>,
 }
 
@@ -127,6 +127,10 @@ pub trait RigidBodySimulation: GetRigidBodySimulation {
         }
     }
 
+    fn camera_mover_mut(&mut self) -> &mut CameraMover {
+	&mut self.get_rigid_body_simulation().camera_mover
+    }
+    
     fn camera_mut(&mut self) -> &mut Camera {
         self.get_rigid_body_simulation().renderer.camera_mut()
     }

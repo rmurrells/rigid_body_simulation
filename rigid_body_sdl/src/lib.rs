@@ -11,6 +11,7 @@ use sdl2::Sdl;
 
 pub use rigid_body_core::{
     config,
+    input::camera_mover::CameraMode,
     math,
     mesh,
     rigid_body::RigidBody,

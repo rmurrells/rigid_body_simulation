@@ -2,6 +2,7 @@ mod input;
 
 use rigid_body_core::{
     config::test,
+    input::camera_mover::CameraMode,
     GetRigidBodySimulation,
     RigidBodySimulation,
     RigidBodySimulationCore,
@@ -52,6 +53,12 @@ impl RigidBodySimulationWAsm {
     pub fn on_mouse_move(&mut self, x: i32, y: i32) {
 	input::mouse_move(x, y, &mut self.rigid_body_simulation_core.input);
     }
+
+    pub fn on_mouse_wheel(&mut self, xrel: i32, yrel: i32) {
+	input::mouse_wheel(
+	    xrel, yrel, &mut self.rigid_body_simulation_core.input,
+	);
+    }
     
     pub fn pixel_buffer(&mut self) -> *const u8 {
 	self.rigid_body_simulation_core.renderer.pixel_buffer().as_ptr()
@@ -72,6 +79,8 @@ impl RigidBodySimulation for RigidBodySimulationWAsm {}
 #[wasm_bindgen]
 pub fn init(width: u32, height: u32) -> RigidBodySimulationWAsm {
     let mut ret = RigidBodySimulationWAsm::new(width, height);
+    ret.camera_mover_mut().mode = CameraMode::Rel;
+    ret.camera_mover_mut().wheel_scale = 0.2;
     test::bounding_box(&mut ret);
     ret
 }
