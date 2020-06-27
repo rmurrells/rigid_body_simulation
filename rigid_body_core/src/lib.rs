@@ -60,8 +60,8 @@ impl RigidBodySimulationCore {
 	    renderer: RendererCore::new(window_size),
 	    simulation: Simulation::default(),
 	    camera_mover: CameraMover {
-                center: Vector3d::new(5., 5., 5.),
-                camera_range: (0., 500.),
+                center: Vector3d::default(),
+                camera_range: (30., 100.),
                 theta_scale: 0.0045,
                 wheel_scale: 1.,
                 move_fact: 0.1,
