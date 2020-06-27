@@ -33,24 +33,18 @@ function draw() {
     );
 }
 
-function on_key(e, down) {
-    rigid_body_wasm.on_key(e.keyCode, down);
-}
 document.addEventListener('keydown', function(e) {
-    on_key(e, true);
+    rigid_body_wasm.on_key(e.keyCode, true);
 });
 document.addEventListener('keyup', function(e) {
-    on_key(e, false);
+    rigid_body_wasm.on_key(e.keyCode, false);
 });
 
-function on_mouse_button(e, down) {
-    rigid_body_wasm.on_mouse_button(e.keyCode, down);
-}
 document.addEventListener('mousedown', function(e) {
-    on_mouse_button(e, true);
+    rigid_body_wasm.on_mouse_button(e.button, true);
 });
 document.addEventListener('mouseup', function(e) {
-    on_mouse_button(e, false);
+    rigid_body_wasm.on_mouse_button(e.button, false);
 });
 
 canvas.addEventListener('mousemove', function(e) {
