@@ -14,7 +14,6 @@ use sdl2::{
 };
 
 pub struct InputSDL {
-    
     event_pump: EventPump,
 }
 

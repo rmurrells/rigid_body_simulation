@@ -70,6 +70,10 @@ impl RigidBodySimulationCore {
 	    fps_manager_opt: None,
 	}
     }
+
+    pub fn set_window_size(&mut self, window_size: (u32, u32)) {
+	self.renderer.set_window_size(window_size);
+    }
     
     pub fn tick(&mut self) -> bool {
 	self.handle_input();

@@ -42,6 +42,15 @@ impl RigidBodySimulationSDL {
 	Ok(ret)
     }
 
+    pub fn set_window_size(
+	&mut self, window_size: (u32, u32),
+    ) -> StrResult<()> {
+	self.renderer.set_window_size(window_size)
+	    .map_err(|e| e.to_string())?;
+	self.rigid_body_simulation_core.set_window_size(window_size);
+	Ok(())
+    }
+    
     pub fn tick(&mut self) -> StrResult<bool> {
 	self.input.get(&mut self.rigid_body_simulation_core.input);
 	if !self.rigid_body_simulation_core.tick() {return Ok(false);}
