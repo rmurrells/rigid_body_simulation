@@ -11,14 +11,15 @@ use rigid_body::RigidBody;
 pub use collision_manager::SeparatingPlane;
 pub use collision_table::Contact;
 
-pub struct RigidBodySimulation {
+#[derive(Default)]
+pub struct Simulation {
     pub collision_manager: CollisionManager,
     pub rigid_bodies: Vec<RigidBody>,
     initial_rigid_bodies: Vec<RigidBody>,
     force_manager: ForceManager,
 }
 
-impl RigidBodySimulation {
+impl Simulation {
     pub fn new() -> Self {
 	Self {
 	    force_manager: ForceManager::new(Vec::new()),

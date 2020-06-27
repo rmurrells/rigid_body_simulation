@@ -4,12 +4,12 @@ use rigid_body_core::{
 	vector::Vector3d,
     },
     rigid_body::RigidBody,
-    RigidBodySimulation,
+    Simulation,
 };
 use std::f64::consts::PI;
 
 fn main() -> Result<(), String> {
-    let mut rbs = RigidBodySimulation::new();
+    let mut rbs = Simulation::new();
     rbs.add_rigid_body(RigidBody::cuboid(
 	&Vector3d::new(5., 5., 5.),
 	1.,

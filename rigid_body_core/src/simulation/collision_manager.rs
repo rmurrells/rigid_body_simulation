@@ -738,6 +738,12 @@ impl CollisionManager {
     }
 }
 
+impl Default for CollisionManager {
+    fn default() -> Self {
+	Self::new()
+    }	    
+}
+
 enum Mode<'a> {
     ClosestDist{dist: &'a mut f64},
     Contacts{contacts: &'a mut Contacts},

@@ -32,6 +32,12 @@ impl ForceManager {
     }
 }
 
+impl Default for ForceManager {
+    fn default() -> Self {
+	Self::new(Vec::new())
+    }
+}
+
 pub fn earth_gravity(
     rigid_body: &RigidBody, _velocity: &Vector3d,
 ) -> (Vector3d, Vector3d) {

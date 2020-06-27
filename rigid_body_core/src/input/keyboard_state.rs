@@ -1,9 +1,9 @@
-#[derive(Default)]
-pub struct KeyStates {
+#[derive(Clone, Copy, Default)]
+pub struct KeyboardState {
     states: [bool; Keycode::Last as usize],
 }
 
-impl KeyStates {
+impl KeyboardState {
     pub fn set(&mut self, keycode: Keycode, pressed: bool) {
         self.states[keycode as usize] = pressed;
     }
@@ -13,6 +13,7 @@ impl KeyStates {
     }
 }
 
+#[derive(Copy, Clone)]
 pub enum Keycode {
     A,
     D,

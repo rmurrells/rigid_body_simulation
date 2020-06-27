@@ -7,17 +7,13 @@ use crate::{
     },
     mesh::polyhedron_meshes,
     RigidBody,
-    RigidBodySimulationSDL,
-    StrResult,
+    RigidBodySimulation,
 };
 use std::f64::consts::PI;
 
-pub fn immovable() -> StrResult<RigidBodySimulationSDL> {
-    let mut rigid_body_simulation = RigidBodySimulationSDL::new()?;
+pub fn immovable(rigid_body_simulation: &mut impl RigidBodySimulation) {
     rigid_body_simulation.camera_mut().position = Vector3d::new(0., 0., -10.);
-
     let mass_inv = 1.;
-    
     let dim = Vector3d::new(5., 5., 5.);
     rigid_body_simulation.add_rigid_body(
 	RigidBody::cuboid(
@@ -45,13 +41,9 @@ pub fn immovable() -> StrResult<RigidBodySimulationSDL> {
 	),
 	None,
     );
-    
-    Ok(rigid_body_simulation)
 }
 
-pub fn icosphere(sd: u8) -> StrResult<RigidBodySimulationSDL> {
-    let mut rigid_body_simulation = RigidBodySimulationSDL::new()?;
-
+pub fn icosphere(rigid_body_simulation: &mut impl RigidBodySimulation, sd: u8) {
     let mesh = polyhedron_meshes::icosphere(5., sd);
     let mass_inv = 1.;
     let mi_inv = moment_of_intertia::solid_sphere(
@@ -88,11 +80,9 @@ pub fn icosphere(sd: u8) -> StrResult<RigidBodySimulationSDL> {
 	    (0, 255, 0),
 	)),
     );
-    Ok(rigid_body_simulation)
 }
 
-pub fn coincident() -> StrResult<RigidBodySimulationSDL> {
-    let mut rigid_body_simulation = RigidBodySimulationSDL::new()?;
+pub fn coincident(rigid_body_simulation: &mut impl RigidBodySimulation) {
     rigid_body_simulation.camera_mut().position = Vector3d::new(0., 0., -30.);
     let dim = Vector3d::new(5., 5., 5.);
     rigid_body_simulation.add_rigid_body(
@@ -123,13 +113,10 @@ pub fn coincident() -> StrResult<RigidBodySimulationSDL> {
 	    (0, 255, 0),
 	)),
     );
-    Ok(rigid_body_simulation)
 }
 
-pub fn bounding_box() -> StrResult<RigidBodySimulationSDL> {
-    let mut rigid_body_simulation = RigidBodySimulationSDL::new()?;
+pub fn bounding_box(rigid_body_simulation: &mut impl RigidBodySimulation) {
     rigid_body_simulation.camera_mut().position = Vector3d::new(0., 0., -30.);
-
     let radius = 2.25;
     let mass_inv = 1.;
     let mi_inv = moment_of_intertia::solid_sphere(
@@ -294,6 +281,4 @@ pub fn bounding_box() -> StrResult<RigidBodySimulationSDL> {
 	),
 	None,
     );
-
-    Ok(rigid_body_simulation)
 }

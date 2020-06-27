@@ -3,6 +3,11 @@ mod draw_3d;
 mod render_object_creator;
 mod screen_buffer;
 
+pub use camera::Camera;
+pub use screen_buffer::{
+    Color,
+    PIXEL_FORMAT,
+};
 use crate::{
     math::{
 	matrix_vector,
@@ -15,27 +20,22 @@ use crate::{
     SeparatingPlane,
     simulation::{
 	rigid_body::RigidBody,
-	RigidBodySimulation,
+	Simulation,
     },
     utility::int_hash::IntMap,
     UID,
 };
 use draw_3d::Draw3d;
 use std::f64::consts::PI;
-pub use camera::Camera;
-pub use screen_buffer::{
-    Color,
-    PIXEL_FORMAT,
-};
 
 type MeshMap = IntMap<UID, (Mesh, Color)>;
 
-pub struct RendererImpl {
+pub struct RendererCore {
     draw_3d: Draw3d,
     mesh_map: MeshMap,
 }
 
-impl RendererImpl {
+impl RendererCore {
     pub fn new(window_size: (u32, u32)) -> Self {
 	Self {
 	    draw_3d: Draw3d::new(window_size),
@@ -76,7 +76,7 @@ impl RendererImpl {
     }
     
     pub fn render_rigid_bodies_debug(
-	&mut self, simulation: &RigidBodySimulation,
+	&mut self, simulation: &Simulation,
     ) {
 	for (i, rigid_body) in simulation.rigid_bodies.iter().enumerate() {
 	    self.draw_rigid_body(
@@ -332,103 +332,5 @@ impl RendererImpl {
 		}
 	    ),
 	}
-    }    
-}
-
-pub trait Renderer {
-    fn get(&self) -> &RendererImpl;
-    fn get_mut(&mut self) -> &mut RendererImpl;
-
-    fn get_data(&self) -> &[u8] {
-	self.get().get_data()
-    }
-    
-    fn get_data_mut(&mut self) -> &mut [u8] {
-	self.get_mut().get_data_mut()
-    }
-    
-    fn add_mesh(&mut self, uid: UID, mesh: Mesh, color: Color) {
-	self.get_mut().mesh_map.insert(uid, (mesh, color));
-    }
-    
-    fn camera_mut(&mut self) -> &mut Camera {
-	self.get_mut().camera_mut()
-    }
-    
-    fn clear(&mut self, color: Color) {
-	self.get_mut().clear(color);
-    }
-
-    fn render_rigid_bodies(&mut self, rigid_bodies: &[RigidBody]) {
-	self.get_mut().render_rigid_bodies(rigid_bodies);
-    }
-    
-    fn render_rigid_bodies_debug(
-	&mut self, simulation: &RigidBodySimulation,
-    ) {
-	self.get_mut().render_rigid_bodies_debug(simulation);
-    }
-    
-    fn draw_aligned_cuboid(
-	&mut self,
-	min: &Vector3d,
-	max: &Vector3d,
-	color: Color,
-    ) {
-	self.get_mut().draw_aligned_cuboid(min, max, color);
-    }
-    
-    fn draw_line(
-	&mut self,
-	start: &Vector3d,
-	end: &Vector3d,
-	color: Color,
-	in_front: bool
-    ) {
-	self.get_mut().draw_line(start, end, color, in_front);
-    }
-    
-    fn draw_mesh(
-	&mut self,
-	mesh: &Mesh,
-	world_position: &Vector3d,
-	world_orientation: &Matrix3x3,
-	color: Color,
-    ) {
-	self.get_mut().draw_mesh(mesh, world_position, world_orientation, color);
-    }
-
-    fn draw_polyhedron_wire_frame(
-	&mut self,
-	polyhedron: &Polyhedron,
-	color: Color,
-    ) {
-	self.get_mut().draw_polyhedron_wire_frame(
-	    polyhedron, color,
-	);
-    }
-
-    fn draw_position(
-	&mut self,
-	position: &Vector3d,
-	color: Color,
-    ) {
-	self.get_mut().draw_position(position, color);
-    }
-
-    fn draw_rigid_body_mesh_lines(
-	&mut self,
-	rigid_body: &RigidBody,
-	color_opt: Option<Color>,
-    ) {
-	self.get_mut().draw_rigid_body_mesh_lines(rigid_body, color_opt);
-    }
-    
-    fn draw_rigid_body(
-	&mut self,
-	rigid_body: &RigidBody,
-	color_opt: Option<Color>,
-    ) {
-	self.get_mut().draw_rigid_body(rigid_body, color_opt);
     }    
 }
