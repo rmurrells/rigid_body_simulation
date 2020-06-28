@@ -1,7 +1,6 @@
 use crate::math::{
     geometry,
     matrix_vector,
-    //polyhedron::Polyhedron,
     vector::Vector3d,
 };
 use super::{
@@ -30,7 +29,6 @@ const COR: f64 = 1.;
 pub struct CollisionManager {
     bounding_box_collision_manager: BoundingBoxCollisionManager,
     collision_table: CollisionTable,
-    pub intersections: Vec<Vector3d>,
 }
 
 impl CollisionManager {
@@ -40,7 +38,6 @@ impl CollisionManager {
 		COLLISION_EPSILON,
 	    ),
 	    collision_table: CollisionTable::new(),
-	    intersections: Vec::new(),
 	}
     }
 
@@ -72,7 +69,6 @@ impl CollisionManager {
     pub fn collide_simple(
 	&mut self, rigid_bodies: &mut [RigidBody],
     ) {
-	self.intersections.clear();
 	self.bounding_box_collision_manager.update(
 	    rigid_bodies, &mut self.collision_table,
 	);
@@ -106,27 +102,6 @@ impl CollisionManager {
 	    }
 	}
     }
-
-    /*
-    pub fn generate(
-	&mut self, rigid_bodies: &[RigidBody],
-    ) -> Result<(), String> {
-	self.collision_table.generate(rigid_bodies.len());
-	self.bounding_box_collision_manager.generate(
-	    rigid_bodies, &mut self.collision_table,
-	);
-	for j in 0..rigid_bodies.len() {
-	    for i in j+1..rigid_bodies.len() {
-		if !self.check_for_separating_plane(
-		    i, j, rigid_bodies,
-		) {
-		    return Err("Collision found at generate stage".into());
-		}
-	    }
-	}
-	Ok(())
-    }
-    */
 
     fn check_for_separating_plane(
 	&mut self,

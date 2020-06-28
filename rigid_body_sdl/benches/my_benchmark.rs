@@ -5,8 +5,8 @@ use criterion::{
 };
 use rigid_body_sdl::{
     config::test,
-    RigidBodySimulation,
     RigidBodySimulationSDL,
+    RigidBodySimulationTrait,
 };
 use std::time::Duration;
 
