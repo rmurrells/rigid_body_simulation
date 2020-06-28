@@ -338,7 +338,6 @@ impl CollisionManager {
 		plane_coincident_edges.push(edge_index);	
 	    }
 	}
-	
 	let other_rigid_body = &rigid_bodies[other_rigid_body_index];
 	let other_polyhedron = other_rigid_body.polyhedron_world();
 	let other_vertices = other_polyhedron.vertices();
@@ -363,12 +362,6 @@ impl CollisionManager {
 				edge.direction().cross(other_edge.direction());
 			    if plane_direction.is_zero() {continue;}
 			    plane_direction.normalize();
-			    if geometry::pos_raw_plane_signed_dist(
-				&other_rigid_body.position,
-				edge_start, &plane_direction,
-			    ) < 0. {
-				plane_direction.scale_assign(-1.);
-			    }
 			    contacts.push(Contact::EdgeEdge {
 				edge_edge_indices: EdgeEdgeIndices {
 				    plane_rigid_body: plane_rigid_body_index,
