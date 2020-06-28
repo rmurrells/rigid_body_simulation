@@ -75,6 +75,11 @@ impl CollisionManager {
 	self.collision_table.reset_colliding();
 	for j in 0..rigid_bodies.len() {
 	    for i in j+1..rigid_bodies.len() {
+		if rigid_bodies[i].is_immovable() &&
+		    rigid_bodies[j].is_immovable()
+		{
+		    continue;
+		}
 		if !self.collision_table.get(i, j).bounding_box_collision() {
 		    continue;
 		}
@@ -98,6 +103,11 @@ impl CollisionManager {
 	);
 	for j in 0..rigid_bodies.len() {
 	    for i in j+1..rigid_bodies.len() {
+		if rigid_bodies[i].is_immovable() &&
+		    rigid_bodies[j].is_immovable()
+		{
+		    continue;
+		}
 		self.check_for_separating_plane(i, j, rigid_bodies);
 	    }
 	}
