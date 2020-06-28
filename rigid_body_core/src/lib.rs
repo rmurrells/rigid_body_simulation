@@ -18,18 +18,18 @@ use input::{
 use render::{
     Camera,
     Color,
+    Draw3dTrait,
     RendererCore,
+    ScreenBufferTrait
 };
 use rigid_body::RigidBody;
 use std::cell::Cell;
 use utility::FPSManager;
 pub use simulation::{
-    rigid_body,
-    Simulation,
-};
-pub use simulation::{
     Contact,
+    rigid_body,
     SeparatingPlane,
+    Simulation,
 };
     
 pub type UID = usize;
@@ -111,15 +111,17 @@ impl RigidBodySimulationCore {
     }
 }
 
-pub trait GetRigidBodySimulation {
-    fn get_rigid_body_simulation(&mut self) -> &mut RigidBodySimulationCore;
+pub trait RigidBodySimulationCoreAccess {
+    fn rigid_body_simulation_core_access(
+	&mut self,
+    ) -> &mut RigidBodySimulationCore;
 }
 
-pub trait RigidBodySimulation: GetRigidBodySimulation {
+pub trait RigidBodySimulationTrait: RigidBodySimulationCoreAccess {
     fn add_rigid_body(
         &mut self, rigid_body: RigidBody, mesh_opt: Option<(Mesh, Color)>,
     ) {
-	let core = self.get_rigid_body_simulation();
+	let core = self.rigid_body_simulation_core_access();
         let uid = rigid_body.uid();
         core.simulation.add_rigid_body(rigid_body);
         if let Some((mesh, color)) = mesh_opt {
@@ -128,15 +130,15 @@ pub trait RigidBodySimulation: GetRigidBodySimulation {
     }
 
     fn camera_mover_mut(&mut self) -> &mut CameraMover {
-	&mut self.get_rigid_body_simulation().camera_mover
+	&mut self.rigid_body_simulation_core_access().camera_mover
     }
     
     fn camera_mut(&mut self) -> &mut Camera {
-        self.get_rigid_body_simulation().renderer.camera_mut()
+        self.rigid_body_simulation_core_access().renderer.camera_mut()
     }
 
     fn set_fps(&mut self, fps: u64) {
-	let core = self.get_rigid_body_simulation();
+	let core = self.rigid_body_simulation_core_access();
 	if fps == 0 {
 	    core.fps_manager_opt = None;
 	} else {
@@ -145,9 +147,11 @@ pub trait RigidBodySimulation: GetRigidBodySimulation {
     }
 }
 
-impl GetRigidBodySimulation for RigidBodySimulationCore {
-    fn get_rigid_body_simulation(&mut self) -> &mut RigidBodySimulationCore {
+impl RigidBodySimulationCoreAccess for RigidBodySimulationCore {
+    fn rigid_body_simulation_core_access(
+	&mut self,
+    ) -> &mut RigidBodySimulationCore {
 	self
     }
 }
-impl RigidBodySimulation for RigidBodySimulationCore {}	
+impl RigidBodySimulationTrait for RigidBodySimulationCore {}	

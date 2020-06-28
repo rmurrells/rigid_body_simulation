@@ -1,8 +1,8 @@
 use rigid_body_sdl::{
     config::test,
     CameraMode,
-    RigidBodySimulation,
     RigidBodySimulationSDL,
+    RigidBodySimulationTrait,
     StrResult,
 };
 

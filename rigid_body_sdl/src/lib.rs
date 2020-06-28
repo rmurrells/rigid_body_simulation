@@ -4,8 +4,9 @@ mod render;
 use input::InputSDL;
 use render::RendererSDL;
 use rigid_body_core::{
-    GetRigidBodySimulation,
+    render::ScreenBufferTrait,
     RigidBodySimulationCore,
+    RigidBodySimulationCoreAccess,
 };
 use sdl2::Sdl;
 
@@ -15,7 +16,7 @@ pub use rigid_body_core::{
     math,
     mesh,
     rigid_body::RigidBody,
-    RigidBodySimulation,
+    RigidBodySimulationTrait,
 };
 pub use render::StrResult;
 
@@ -62,9 +63,11 @@ impl RigidBodySimulationSDL {
     }
 }
 
-impl GetRigidBodySimulation for RigidBodySimulationSDL {
-    fn get_rigid_body_simulation(&mut self) -> &mut RigidBodySimulationCore {
+impl RigidBodySimulationCoreAccess for RigidBodySimulationSDL {
+    fn rigid_body_simulation_core_access(
+	&mut self,
+    ) -> &mut RigidBodySimulationCore {
 	&mut self.rigid_body_simulation_core
     }
 }
-impl RigidBodySimulation for RigidBodySimulationSDL {}
+impl RigidBodySimulationTrait for RigidBodySimulationSDL {}

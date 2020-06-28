@@ -3,9 +3,10 @@ mod input;
 use rigid_body_core::{
     config::test,
     input::camera_mover::CameraMode,
-    GetRigidBodySimulation,
-    RigidBodySimulation,
+    render::ScreenBufferTrait,
     RigidBodySimulationCore,
+    RigidBodySimulationCoreAccess,
+    RigidBodySimulationTrait,
 };
 
 use wasm_bindgen::prelude::*;
@@ -69,12 +70,12 @@ impl RigidBodySimulationWAsm {
     }
 }
 
-impl GetRigidBodySimulation for RigidBodySimulationWAsm {
-    fn get_rigid_body_simulation(&mut self) -> &mut RigidBodySimulationCore {
+impl RigidBodySimulationCoreAccess for RigidBodySimulationWAsm {
+    fn rigid_body_simulation_core_access(&mut self) -> &mut RigidBodySimulationCore {
 	&mut self.rigid_body_simulation_core
     }
 }
-impl RigidBodySimulation for RigidBodySimulationWAsm {}
+impl RigidBodySimulationTrait for RigidBodySimulationWAsm {}
 
 #[wasm_bindgen]
 pub fn init(width: u32, height: u32) -> RigidBodySimulationWAsm {

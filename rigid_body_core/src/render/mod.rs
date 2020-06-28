@@ -4,28 +4,35 @@ mod render_object_creator;
 mod screen_buffer;
 
 pub use camera::Camera;
+pub use draw_3d::Draw3dTrait;
 pub use screen_buffer::{
     Color,
     PIXEL_FORMAT,
+    ScreenBufferTrait,
 };
 use crate::{
     math::{
 	matrix_vector,
-	matrix::Matrix3x3,
-	polyhedron::Polyhedron,
 	rotation_matrix,
 	vector::Vector3d,
     },
     mesh::Mesh,
-    SeparatingPlane,
     simulation::{
 	rigid_body::RigidBody,
 	Simulation,
     },
+    SeparatingPlane,
     utility::int_hash::IntMap,
     UID,
 };
-use draw_3d::Draw3d;
+use draw_3d::{
+    Draw3d,
+    Draw3dAccess,
+};
+use screen_buffer::{
+    ScreenBuffer,
+    ScreenBufferAccess,
+};
 use std::f64::consts::PI;
 
 type MeshMap = IntMap<UID, (Mesh, Color)>;
@@ -47,28 +54,6 @@ impl RendererCore {
 	self.mesh_map.insert(uid, (mesh, color));
     }
     
-    pub fn camera_mut(&mut self) -> &mut Camera {
-	&mut self.draw_3d.camera
-    }
-    
-    pub fn clear(&mut self, color: Color) {
-	self.draw_3d.clear(color);
-    }
-
-    pub fn pixel_buffer(&self) -> &[u8] {
-	self.draw_3d.get_data()
-    }
-    
-    pub fn pixel_buffer_mut(&mut self) -> &mut [u8] {
-	self.draw_3d.get_data_mut()
-    }
-    
-    pub fn set_window_size(
-	&mut self, window_size: (u32, u32),
-    ) {
-	self.draw_3d.set_window_size(window_size);
-    }
-
     pub fn render_rigid_bodies(&mut self, rigid_bodies: &[RigidBody]) {
 	for rigid_body in rigid_bodies {
 	    self.draw_rigid_body(rigid_body, None);	    
@@ -181,53 +166,6 @@ impl RendererCore {
 	    }
 	}
     }
-    
-    pub fn draw_aligned_cuboid(
-	&mut self,
-	min: &Vector3d,
-	max: &Vector3d,
-	color: Color,
-    ) {
-	self.draw_3d.draw_aligned_cuboid(min, max, color);
-    }
-    
-    pub fn draw_line(
-	&mut self,
-	start: &Vector3d,
-	end: &Vector3d,
-	color: Color,
-	in_front: bool
-    ) {
-	self.draw_3d.draw_line(start, end, color, in_front);
-    }
-    
-    pub fn draw_mesh(
-	&mut self,
-	mesh: &Mesh,
-	world_position: &Vector3d,
-	world_orientation: &Matrix3x3,
-	color: Color,
-    ) {
-	self.draw_3d.draw_mesh(mesh, world_position, world_orientation, color);
-    }
-
-    pub fn draw_polyhedron_wire_frame(
-	&mut self,
-	polyhedron: &Polyhedron,
-	color: Color,
-    ) {
-	self.draw_3d.draw_polyhedron_wire_frame(
-	    polyhedron, color,
-	);
-    }
-
-    pub fn draw_position(
-	&mut self,
-	position: &Vector3d,
-	color: Color,
-    ) {
-	self.draw_3d.draw_position(position, color);
-    }
 
     pub fn draw_rigid_body_mesh_lines(
 	&mut self,
@@ -248,7 +186,7 @@ impl RendererCore {
 	    rigid_body, color_opt, &self.mesh_map, &mut self.draw_3d,
 	);
     }
-
+    
     fn draw_edge_plane(
 	&mut self,
 	plane_edge_start: &Vector3d,
@@ -334,3 +272,23 @@ impl RendererCore {
 	}
     }    
 }
+
+impl Draw3dAccess for RendererCore {
+    fn draw_3d_access(&self) -> &Draw3d {
+	&self.draw_3d
+    }
+    fn draw_3d_access_mut(&mut self) -> &mut Draw3d {
+	&mut self.draw_3d
+    }
+}
+impl Draw3dTrait for RendererCore {}
+
+impl ScreenBufferAccess for RendererCore {
+    fn screen_buffer_access(&self) -> &ScreenBuffer {
+	self.draw_3d.screen_buffer_access()
+    }
+    fn screen_buffer_access_mut(&mut self) -> &mut ScreenBuffer {
+	self.draw_3d.screen_buffer_access_mut()
+    }
+}
+impl ScreenBufferTrait for RendererCore {}

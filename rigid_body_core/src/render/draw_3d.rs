@@ -11,6 +11,8 @@ use super::{
     render_object_creator::RenderObjectCreator,
     screen_buffer::{
 	ScreenBuffer,
+	ScreenBufferAccess,
+	ScreenBufferTrait,
 	Color,
     },
 };
@@ -36,18 +38,6 @@ impl Draw3d {
 	}
     }
 
-    pub fn clear(&mut self, color: Color) {
-	self.screen_buffer.clear(color);
-    }
-
-    pub fn get_data(&self) -> &[u8] {
-	self.screen_buffer.get_data()
-    }
-    
-    pub fn get_data_mut(&mut self) -> &mut [u8] {
-	self.screen_buffer.get_data_mut()
-    }
-    
     pub fn get_simple_light_color(
 	color: Color,
 	light: f64,
@@ -59,45 +49,59 @@ impl Draw3d {
 	    (color.b as f64 * light) as u8,
 	)
     }
+}
 
-    pub fn set_window_size(&mut self, window_size: (u32, u32)) {
-	self.render_object_creator.set_window_size(window_size);
-	self.screen_buffer.resize(window_size);
+pub trait Draw3dAccess {
+    fn draw_3d_access(&self) -> &Draw3d;
+    fn draw_3d_access_mut(&mut self) -> &mut Draw3d;
+}
+
+pub trait Draw3dTrait: Draw3dAccess {
+    fn camera_mut(&mut self) -> &mut Camera {
+	&mut self.draw_3d_access_mut().camera
+    }
+
+    fn set_window_size(&mut self, window_size: (u32, u32)) {
+	let draw_3d = self.draw_3d_access_mut();
+	draw_3d.render_object_creator.set_window_size(window_size);
+	draw_3d.screen_buffer.resize(window_size);
     }
     
-    pub fn draw_aligned_cuboid(
+    fn draw_aligned_cuboid(
 	&mut self,
 	min: &Vector3d,
 	max: &Vector3d,
 	color: Color,
     ) {
-	self.draw_line(min, &Vector3d::new(max[0], min[1], min[2]), color, false);
-	self.draw_line(&Vector3d::new(max[0], min[1], min[2]), &Vector3d::new(max[0], max[1], min[2]), color, false);
-	self.draw_line(&Vector3d::new(max[0], max[1], min[2]), &Vector3d::new(min[0], max[1], min[2]), color, false);
-	self.draw_line(&Vector3d::new(min[0], max[1], min[2]), min, color, false);
+	let draw_3d = self.draw_3d_access_mut();
+	draw_3d.draw_line(min, &Vector3d::new(max[0], min[1], min[2]), color, false);
+	draw_3d.draw_line(&Vector3d::new(max[0], min[1], min[2]), &Vector3d::new(max[0], max[1], min[2]), color, false);
+	draw_3d.draw_line(&Vector3d::new(max[0], max[1], min[2]), &Vector3d::new(min[0], max[1], min[2]), color, false);
+	draw_3d.draw_line(&Vector3d::new(min[0], max[1], min[2]), min, color, false);
 
-	self.draw_line(&Vector3d::new(min[0], min[1], max[2]), &Vector3d::new(max[0], min[1], max[2]), color, false);
-	self.draw_line(&Vector3d::new(max[0], min[1], max[2]), max, color, false);
-	self.draw_line(max, &Vector3d::new(min[0], max[1], max[2]), color, false);
-	self.draw_line(&Vector3d::new(min[0], max[1], max[2]), &Vector3d::new(min[0], min[1], max[2]), color, false);
+	draw_3d.draw_line(&Vector3d::new(min[0], min[1], max[2]), &Vector3d::new(max[0], min[1], max[2]), color, false);
+	draw_3d.draw_line(&Vector3d::new(max[0], min[1], max[2]), max, color, false);
+	draw_3d.draw_line(max, &Vector3d::new(min[0], max[1], max[2]), color, false);
+	draw_3d.draw_line(&Vector3d::new(min[0], max[1], max[2]), &Vector3d::new(min[0], min[1], max[2]), color, false);
 
-	self.draw_line(min, &Vector3d::new(min[0], min[1], max[2]), color, false);
-	self.draw_line(&Vector3d::new(max[0], min[1], min[2]), &Vector3d::new(max[0], min[1], max[2]), color, false);
-	self.draw_line(&Vector3d::new(max[0], max[1], min[2]), max, color, false);
-	self.draw_line(&Vector3d::new(min[0], max[1], min[2]), &Vector3d::new(min[0], max[1], max[2]), color, false);
+	draw_3d.draw_line(min, &Vector3d::new(min[0], min[1], max[2]), color, false);
+	draw_3d.draw_line(&Vector3d::new(max[0], min[1], min[2]), &Vector3d::new(max[0], min[1], max[2]), color, false);
+	draw_3d.draw_line(&Vector3d::new(max[0], max[1], min[2]), max, color, false);
+	draw_3d.draw_line(&Vector3d::new(min[0], max[1], min[2]), &Vector3d::new(min[0], max[1], max[2]), color, false);
     }
     
-    pub fn draw_line(
+    fn draw_line(
 	&mut self,
 	start: &Vector3d,
 	end: &Vector3d,
 	color: Color,
 	in_front: bool
     ) {
-	if let Some(window_line) = &self.render_object_creator.get_window_line(
-	    start, end, &self.camera,
+	let draw_3d = self.draw_3d_access_mut();
+	if let Some(window_line) = &draw_3d.render_object_creator.get_window_line(
+	    start, end, &draw_3d.camera,
 	) {
-	    self.screen_buffer.draw_clipped_line(
+	    draw_3d.screen_buffer.draw_clipped_line(
 		&window_line.finite_line_3d.start,
 		&window_line.finite_line_3d.end,
 		color, in_front,
@@ -105,29 +109,30 @@ impl Draw3d {
 	}
     }
     
-    pub fn draw_mesh(
+    fn draw_mesh(
 	&mut self,
 	mesh: &Mesh,
 	world_position: &Vector3d,
 	world_orientation: &Matrix3x3,
 	color: Color,
     ) {
-	for window_triangle in self.render_object_creator.get_window_triangles(
+	let draw_3d = self.draw_3d_access_mut();
+	for window_triangle in draw_3d.render_object_creator.get_window_triangles(
 	    &mesh.mesh_triangles,
 	    world_position,
 	    world_orientation,
-	    &self.camera,
+	    &draw_3d.camera,
 	) {
-	    let color = Self::get_simple_light_color(
+	    let color = Draw3d::get_simple_light_color(
 		color, window_triangle.light_value,
 	    );
-	    self.screen_buffer.fill_triangle(
+	    draw_3d.screen_buffer.fill_triangle(
 		&window_triangle.triangle_3d, color,
 	    );
 	}
     }
 
-    pub fn draw_mesh_lines(
+    fn draw_mesh_lines(
 	&mut self,
 	mesh: &Mesh,
 	world_position: &Vector3d,
@@ -135,26 +140,28 @@ impl Draw3d {
 	color: Color,
 	in_front: bool,
     ) {
-	for window_triangle in self.render_object_creator.get_window_triangles(
+	let draw_3d = self.draw_3d_access_mut();
+	for window_triangle in draw_3d.render_object_creator.get_window_triangles(
 	    &mesh.mesh_triangles,
 	    world_position,
 	    world_orientation,
-	    &self.camera,
+	    &draw_3d.camera,
 	) {
-	    self.screen_buffer.draw_triangle_lines(
+	    draw_3d.screen_buffer.draw_triangle_lines(
 		&window_triangle.triangle_3d, color, in_front,
 	    );
 	}
     }
     
-    pub fn draw_polyhedron_wire_frame(
+    fn draw_polyhedron_wire_frame(
 	&mut self,
 	polyhedron: &Polyhedron,
 	color: Color,
     ) {
+	let draw_3d = self.draw_3d_access_mut();
 	let vertices = polyhedron.vertices();
 	for edge in polyhedron.edges() {
-	    self.draw_line(
+	    draw_3d.draw_line(
 		&vertices[edge.start_index()],
 		&vertices[edge.end_index()],
 		color,
@@ -163,17 +170,39 @@ impl Draw3d {
 	}
     }
 
-    pub fn draw_position(
+    fn draw_position(
 	&mut self,
 	position: &Vector3d,
 	color: Color,
     ) {
+	let draw_3d = self.draw_3d_access_mut();
 	if let Some(window_position) =
-	    &self.render_object_creator.get_window_pos(
-		position, &self.camera,
+	    &draw_3d.render_object_creator.get_window_pos(
+		position, &draw_3d.camera,
 	    )
 	{
-	    self.screen_buffer.draw_position(window_position, color);
+	    draw_3d.screen_buffer.draw_position(window_position, color);
 	}
+    }    
+}
+
+impl Draw3dAccess for Draw3d {
+    fn draw_3d_access(&self) -> &Draw3d {
+	self
+    }
+    fn draw_3d_access_mut(&mut self) -> &mut Draw3d {
+	self
     }
 }
+impl Draw3dTrait for Draw3d {}
+
+
+impl ScreenBufferAccess for Draw3d {
+    fn screen_buffer_access(&self) -> &ScreenBuffer {
+	&self.screen_buffer
+    }
+    fn screen_buffer_access_mut(&mut self) -> &mut ScreenBuffer {
+	&mut self.screen_buffer
+    }
+}
+impl ScreenBufferTrait for Draw3d {}

@@ -42,21 +42,6 @@ impl ScreenBuffer {
 	}
     }
 
-    pub fn clear(&mut self, color: Color) {
-	for i in 0..self.data.len()/PIXEL_FORMAT {
-	    self.fill_pixel(i, color);
-	}
-	self.depth.iter_mut().for_each(|e| *e = 0.);
-    }
-
-    pub fn get_data(&self) -> &[u8] {
-	&self.data
-    }
-    
-    pub fn get_data_mut(&mut self) -> &mut [u8] {
-	&mut self.data
-    }
-
     pub fn resize(&mut self, window_size: (u32, u32)) {
 	*self = Self::new(window_size);
     }
@@ -64,7 +49,7 @@ impl ScreenBuffer {
     pub fn window_size(&self) -> (u32, u32) {
 	self.window_size
     }
-    
+
     pub fn draw_clipped_line(
 	&mut self,
 	start: &Vector3d,
@@ -156,7 +141,6 @@ impl ScreenBuffer {
 	);
     }
 
-    #[allow(dead_code)]
     pub fn draw_triangle_lines(
 	&mut self,
 	triangle: &Triangle3d,
@@ -164,9 +148,15 @@ impl ScreenBuffer {
 	in_front: bool,
     ) {
 	let vertices = &triangle.vertices;
-	self.draw_clipped_line(&vertices[0], &vertices[1], color, in_front);
-	self.draw_clipped_line(&vertices[1], &vertices[2], color, in_front);
-	self.draw_clipped_line(&vertices[2], &vertices[0], color, in_front);
+	self.draw_clipped_line(
+	    &vertices[0], &vertices[1], color, in_front,
+	);
+	self.draw_clipped_line(
+	    &vertices[1], &vertices[2], color, in_front,
+	);
+	self.draw_clipped_line(
+	    &vertices[2], &vertices[0], color, in_front,
+	);
     }
 
     pub fn fill_rect(
@@ -189,7 +179,8 @@ impl ScreenBuffer {
 	depth: f64,
 	color: Color,
     ) {
-	if x > self.window_size.0-1 || y > self.window_size.1-1 {return;}
+	if x > self.window_size.0-1 ||
+	    y > self.window_size.1-1 {return;}
 	let index = (x+y*self.window_size.0) as usize;
 	let buffer_depth = &mut self.depth[index];
 	if depth > *buffer_depth {
@@ -204,7 +195,7 @@ impl ScreenBuffer {
 	color: Color,
     ) {
 	let (vertex_1, vertex_2, vertex_3) =
-	    Self::get_y_sorted_vertices(triangle);
+	    ScreenBuffer::get_y_sorted_vertices(triangle);
 	let line_12 = Line::from_vertices(&vertex_1, &vertex_2);
 	let line_13 = Line::from_vertices(&vertex_1, &vertex_3);
 	let line_23 = Line::from_vertices(&vertex_2, &vertex_3);
@@ -246,7 +237,7 @@ impl ScreenBuffer {
 	fill_half(vertex_1.y, vertex_2.y, &line_12, &line_13);
 	fill_half(vertex_2.y, vertex_3.y, &line_23, &line_13);
     }
-
+    
     fn fill_pixel(&mut self, mut index: usize, color: Color) {
 	index *= PIXEL_FORMAT;
 	self.data[index] = color.r;
@@ -278,6 +269,8 @@ impl ScreenBuffer {
     }
 }
 
+
+
 struct Line {
     m: f64, c: i32, m_depth: f64, c_depth: f64,
 }
@@ -304,3 +297,36 @@ impl Line {
 struct Vertex {
     x: i32, y: i32, z: f64,
 }
+
+pub trait ScreenBufferAccess {
+    fn screen_buffer_access(&self) -> &ScreenBuffer;
+    fn screen_buffer_access_mut(&mut self) -> &mut ScreenBuffer;
+}
+
+pub trait ScreenBufferTrait: ScreenBufferAccess {
+    fn clear(&mut self, color: Color) {
+	let screen_buffer = self.screen_buffer_access_mut();
+	for i in 0..screen_buffer.data.len()/PIXEL_FORMAT {
+	    screen_buffer.fill_pixel(i, color);
+	}
+	screen_buffer.depth.iter_mut().for_each(|e| *e = 0.);
+    }
+
+    fn pixel_buffer(&self) -> &[u8] {
+	&self.screen_buffer_access().data
+    }
+    
+    fn pixel_buffer_mut(&mut self) -> &mut [u8] {
+	&mut self.screen_buffer_access_mut().data
+    }
+}
+
+impl ScreenBufferAccess for ScreenBuffer {
+    fn screen_buffer_access(&self) -> &ScreenBuffer {
+	self
+    }
+    fn screen_buffer_access_mut(&mut self) -> &mut ScreenBuffer {
+	self
+    }
+}
+impl ScreenBufferTrait for ScreenBuffer {}
