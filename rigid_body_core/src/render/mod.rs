@@ -13,6 +13,7 @@ pub use screen_buffer::{
 use crate::{
     math::{
 	matrix_vector,
+	polyhedron::Polyhedron,
 	rotation_matrix,
 	vector::Vector3d,
     },
@@ -35,7 +36,14 @@ use screen_buffer::{
 };
 use std::f64::consts::PI;
 
-type MeshMap = IntMap<UID, (Mesh, Color)>;
+type MeshMap = IntMap<UID, RenderOption>;
+
+pub enum RenderOption {
+    Mesh{mesh: Mesh, color: Color},
+    PolyhedronEdges{color: Color},
+    FaceEdges{face_indices: Vec<usize>, color: Color},
+    None,
+}
 
 pub struct RendererCore {
     draw_3d: Draw3d,
@@ -50,13 +58,13 @@ impl RendererCore {
 	}
     }
 
-    pub fn add_mesh(&mut self, uid: UID, mesh: Mesh, color: Color) {
-	self.mesh_map.insert(uid, (mesh, color));
+    pub fn add_mesh(&mut self, uid: UID, render_option: RenderOption) {
+	self.mesh_map.insert(uid, render_option);
     }
     
     pub fn render_rigid_bodies(&mut self, rigid_bodies: &[RigidBody]) {
 	for rigid_body in rigid_bodies {
-	    self.draw_rigid_body(rigid_body, None);	    
+	    self.draw_rigid_body(rigid_body, &None);	    
 	}
     }
     
@@ -66,13 +74,12 @@ impl RendererCore {
 	for (i, rigid_body) in simulation.rigid_bodies.iter().enumerate() {
 	    self.draw_rigid_body(
 		rigid_body,
-		Some(if simulation.collision_manager.is_colliding(i) {
+		&Some(if simulation.collision_manager.is_colliding(i) {
 		    Color::rgb(255, 0, 0)
 		} else {
 		    Color::rgb(0, 255, 0)
 		}),
 	    );
-
 	    let bounding_box = rigid_body.bounding_box();
 	    self.draw_aligned_cuboid(
 		&bounding_box[0],
@@ -86,9 +93,7 @@ impl RendererCore {
 		},
 	    );
 	}
-
-	let len = simulation.rigid_bodies.len();
-	for i in 1..len {
+	for i in 1..simulation.rigid_bodies.len() {
 	    for j in 0..i {
 		let collision_status = simulation
 		    .collision_manager
@@ -102,28 +107,25 @@ impl RendererCore {
 			    let polyhedron = simulation
 				.rigid_bodies[face_indices.face_rigid_body]
 				.polyhedron_world();
-			    let edges = polyhedron.edges();
-			    let vertices = polyhedron.vertices();
-			    let separating_plane =
-				&polyhedron.faces()[face_indices.face];
-			    for edge_index in separating_plane.edge_indices() {
-				let edge = &edges[*edge_index];
-				self.draw_line(
-				    &vertices[edge.start_index()],
-				    &vertices[edge.end_index()],
-				    Color::rgb(255, 0, 0),
-				    true,
-				);
-			    }
+			    Self::draw_face_edges(
+				polyhedron,
+				face_indices.face,
+				Color::rgb(255, 0, 0),
+				true,
+				&mut self.draw_3d,
+			    );
 			    let mut avg = Vector3d::default();
+			    let vertices = polyhedron.vertices();
+			    let separating_face =
+				&polyhedron.faces()[face_indices.face];
 			    let vertex_indices =
-				separating_plane.vertex_indices();
+				separating_face.vertex_indices();
 			    for vertex_index in vertex_indices {
 				avg.add_assign(&vertices[*vertex_index]);
 			    }
 			    avg.scale_assign(1./vertex_indices.len() as f64);
 			    self.draw_line(
-				&avg, &avg.add(separating_plane.direction()),
+				&avg, &avg.add(separating_face.direction()),
 				Color::rgb(255, 255, 255),
 				true,
 			    );
@@ -170,7 +172,7 @@ impl RendererCore {
     pub fn draw_rigid_body_mesh_lines(
 	&mut self,
 	rigid_body: &RigidBody,
-	color_opt: Option<Color>,
+	color_opt: &Option<Color>,
     ) {
 	Self::draw_mesh_triangles_impl(
 	    rigid_body, color_opt, &self.mesh_map, &mut self.draw_3d,
@@ -180,7 +182,7 @@ impl RendererCore {
     pub fn draw_rigid_body(
 	&mut self,
 	rigid_body: &RigidBody,
-	color_opt: Option<Color>,
+	color_opt: &Option<Color>,
     ) {
 	Self::draw_rigid_body_impl(
 	    rigid_body, color_opt, &self.mesh_map, &mut self.draw_3d,
@@ -225,50 +227,107 @@ impl RendererCore {
 	    );
 	}
     }
+
+    fn draw_default(
+	rigid_body: &RigidBody, color_opt: &Option<Color>, draw_3d: &mut Draw3d,
+    ) {
+	draw_3d.draw_polyhedron_edges(
+	    rigid_body.polyhedron_world(),
+	    match color_opt {
+		Some(opt_color) => *opt_color,
+		None => Color::rgb(255, 0, 255),
+	    }
+	)
+    }
+
+    fn draw_face_edges(
+	polyhedron: &Polyhedron,
+	face_index: usize,
+	color: Color,
+	in_front: bool,
+	draw_3d: &mut Draw3d,
+    ) {
+	let vertices = polyhedron.vertices();
+	let edges = polyhedron.edges();
+	for edge_index in polyhedron.faces()[face_index].edge_indices() {
+	    let edge = &edges[*edge_index];
+	    draw_3d.draw_line(
+		&vertices[edge.start_index()],
+		&vertices[edge.end_index()],
+		color,
+		in_front,
+	    );
+	}
+    }
     
     fn draw_mesh_triangles_impl(
 	rigid_body: &RigidBody,
-	color_opt: Option<Color>,
+	color_opt: &Option<Color>,
 	mesh_map: &MeshMap,
-	draw_3d: &mut Draw3d,	
+	draw_3d: &mut Draw3d,
     ) {
-	if let Some((mesh, mesh_color)) = mesh_map.get(&rigid_body.uid()) {
-	    draw_3d.draw_mesh_lines(
-		mesh,
-		&rigid_body.position,
-		rigid_body.rotation(),
-		*match &color_opt {
-		    Some(color) => color,
-		    None => mesh_color,
-		},
-		true,
-	    );
+	if let Some(render_option) = mesh_map.get(&rigid_body.uid()) {
+	    if let RenderOption::Mesh{mesh, color} = render_option {
+		draw_3d.draw_mesh_lines(
+		    mesh,
+		    &rigid_body.position,
+		    rigid_body.rotation(),
+		    *match color_opt {
+			Some(opt_color) => opt_color,
+			None => color,
+		    },
+		    true,
+		);
+	    }
 	}
     }
     
     fn draw_rigid_body_impl(
 	rigid_body: &RigidBody,
-	color_opt: Option<Color>,
+	color_opt: &Option<Color>,
 	mesh_map: &MeshMap,
 	draw_3d: &mut Draw3d,
     ) {
 	match mesh_map.get(&rigid_body.uid()) {
-	    Some((mesh, mesh_color)) => draw_3d.draw_mesh(
-		mesh,
-		&rigid_body.position,
-		rigid_body.rotation(),
-		*match &color_opt {
-		    Some(color) => color,
-		    None => mesh_color,
+	    Some(render_option) => match render_option {
+		RenderOption::Mesh{mesh, color} => {
+		    draw_3d.draw_mesh(
+			mesh,
+			&rigid_body.position,
+			rigid_body.rotation(),
+			*match color_opt {
+			    Some(opt_color) => opt_color,
+			    None => color,
+			}
+		    );
 		}
-	    ),
-	    None => draw_3d.draw_polyhedron_wire_frame(
-		rigid_body.polyhedron_world(),
-		*match &color_opt {
-		    Some(color) => color,
-		    None => &Color{r: 255, g: 0, b: 255, a: 255},
+		RenderOption::PolyhedronEdges{color} => {
+		    draw_3d.draw_polyhedron_edges(
+			rigid_body.polyhedron_world(),
+			*match color_opt {
+			    Some(opt_color) => opt_color,
+			    None => color,
+			}
+		    );   
 		}
-	    ),
+		RenderOption::FaceEdges{face_indices, color} => {
+		    for face_index in face_indices {
+			Self::draw_face_edges(
+			    rigid_body.polyhedron_world(),
+			    *face_index,
+ 			    *match color_opt {
+				Some(opt_color) => opt_color,
+				None => color,
+			    },
+			    false,
+			    draw_3d,
+			);
+		    }
+		}
+		RenderOption::None =>
+		    Self::draw_default(rigid_body, color_opt, draw_3d),
+	    },
+	    None => Self::draw_default(rigid_body, color_opt, draw_3d),
 	}
     }    
 }

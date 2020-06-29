@@ -147,13 +147,13 @@ pub trait Draw3dTrait: Draw3dAccess {
 	    world_orientation,
 	    &draw_3d.camera,
 	) {
-	    draw_3d.screen_buffer.draw_triangle_lines(
+	    draw_3d.screen_buffer.draw_triangle_edges(
 		&window_triangle.triangle_3d, color, in_front,
 	    );
 	}
     }
     
-    fn draw_polyhedron_wire_frame(
+    fn draw_polyhedron_edges(
 	&mut self,
 	polyhedron: &Polyhedron,
 	color: Color,

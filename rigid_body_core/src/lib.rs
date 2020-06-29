@@ -7,7 +7,6 @@ pub mod utility;
 mod simulation;
 
 use math::vector::Vector3d;
-use mesh::Mesh;
 use input::{
     InputCore,
     camera_mover::{
@@ -20,6 +19,7 @@ use render::{
     Color,
     Draw3dTrait,
     RendererCore,
+    RenderOption,
     ScreenBufferTrait
 };
 use rigid_body::RigidBody;
@@ -119,14 +119,12 @@ pub trait RigidBodySimulationCoreAccess {
 
 pub trait RigidBodySimulationTrait: RigidBodySimulationCoreAccess {
     fn add_rigid_body(
-        &mut self, rigid_body: RigidBody, mesh_opt: Option<(Mesh, Color)>,
+        &mut self, rigid_body: RigidBody, render_opt: RenderOption,
     ) {
 	let core = self.rigid_body_simulation_core_access();
         let uid = rigid_body.uid();
         core.simulation.add_rigid_body(rigid_body);
-        if let Some((mesh, color)) = mesh_opt {
-            core.renderer.add_mesh(uid, mesh, color);
-        }
+        core.renderer.add_mesh(uid, render_opt);
     }
 
     fn camera_mover_mut(&mut self) -> &mut CameraMover {
@@ -137,6 +135,10 @@ pub trait RigidBodySimulationTrait: RigidBodySimulationCoreAccess {
         self.rigid_body_simulation_core_access().renderer.camera_mut()
     }
 
+    fn set_debug(&mut self, set: bool) {
+	self.rigid_body_simulation_core_access().debug = set;
+    }
+    
     fn set_fps(&mut self, fps: u64) {
 	let core = self.rigid_body_simulation_core_access();
 	if fps == 0 {

@@ -6,7 +6,10 @@ use crate::{
 	vector::Vector3d,
     },
     mesh::polyhedron_meshes,
-    render::Color,
+    render::{
+	Color,
+	RenderOption,
+    },
     RigidBody,
     RigidBodySimulationTrait,
 };
@@ -25,10 +28,10 @@ pub fn immovable(rigid_body_simulation: &mut impl RigidBodySimulationTrait) {
 	    &Vector3d::new(0., 2., 2.),
 	    &Vector3d::new(2., 0., 0.),
 	),
-	Some((
-	    polyhedron_meshes::cuboid(&dim),
-	    Color::rgb(0, 255, 0),
-	)),
+	RenderOption::Mesh {
+	    mesh: polyhedron_meshes::cuboid(&dim),
+	    color: Color::rgb(0, 255, 0),
+	},
     );
 
     rigid_body_simulation.add_rigid_body(
@@ -40,7 +43,7 @@ pub fn immovable(rigid_body_simulation: &mut impl RigidBodySimulationTrait) {
 	    &Vector3d::new(0., 0., 0.),
 	    &Vector3d::new(0., 0., 0.),
 	),
-	None,
+	RenderOption::None,
     );
 }
 
@@ -61,10 +64,10 @@ pub fn icosphere(rigid_body_simulation: &mut impl RigidBodySimulationTrait, sd: 
 	    &Vector3d::new(0., 0., 0.),
 	    &Vector3d::new(1., 1., 1.),	
 	),
- 	Some((
-	    mesh.clone(),
-	    Color::rgb(0, 255, 0),
-	)),
+ 	RenderOption::Mesh {
+	    mesh: mesh.clone(),
+	    color: Color::rgb(0, 255, 0),
+	},
     );
     rigid_body_simulation.add_rigid_body(
 	RigidBody::from_mesh(
@@ -76,10 +79,10 @@ pub fn icosphere(rigid_body_simulation: &mut impl RigidBodySimulationTrait, sd: 
 	    &Vector3d::new(0., 0., 0.),
 	    &Vector3d::new(0., 1., 0.),	
 	),
- 	Some((
-	    mesh,
-	    Color::rgb(0, 255, 0),
-	)),
+ 	RenderOption::Mesh {
+	    mesh: mesh,
+	    color: Color::rgb(0, 255, 0),
+	},
     );
 }
 
@@ -95,10 +98,10 @@ pub fn coincident(rigid_body_simulation: &mut impl RigidBodySimulationTrait) {
 	    &Vector3d::new(0., 0., 0.),
 	    &Vector3d::new(0., 0., 0.),
 	),
-	Some((
-	    polyhedron_meshes::cuboid(&dim),
-	    Color::rgb(255, 0, 0),
-	)),
+	RenderOption::Mesh {
+	    mesh: polyhedron_meshes::cuboid(&dim),
+	    color: Color::rgb(255, 0, 0),
+	},
     );
     rigid_body_simulation.add_rigid_body(
 	RigidBody::cuboid(
@@ -109,10 +112,10 @@ pub fn coincident(rigid_body_simulation: &mut impl RigidBodySimulationTrait) {
 	    &Vector3d::new(0., 0., 0.),
 	    &Vector3d::new(0., 0., 0.),
 	),
-	Some((
-	    polyhedron_meshes::cuboid(&dim),
-	    Color::rgb(0, 255, 0),
-	)),
+	RenderOption::Mesh {
+	    mesh: polyhedron_meshes::cuboid(&dim),
+	    color: Color::rgb(0, 255, 0),
+	},
     );
 }
 
@@ -125,6 +128,8 @@ pub fn bounding_box(rigid_body_simulation: &mut impl RigidBodySimulationTrait) {
     ).inverse().expect("mi_inv");
     
     let mut dim = Vector3d::new(3., 3., 3.);
+    
+    let color = Color::rgb(0, 255, 0);
     for i in 0..3 {
 	let x = i as f64*10.-10.;
 	for j in 0..3 {
@@ -132,7 +137,6 @@ pub fn bounding_box(rigid_body_simulation: &mut impl RigidBodySimulationTrait) {
 	    let y = j as f64*10.-10.;
 	    for k in 0..3 {
 		let z = k as f64*10.-10.;
-		let color = Color::rgb(0, 255, 0);
 		if j != 2 {
 		    let mesh = polyhedron_meshes::icosphere(radius, 0);
 		    rigid_body_simulation.add_rigid_body(
@@ -145,10 +149,10 @@ pub fn bounding_box(rigid_body_simulation: &mut impl RigidBodySimulationTrait) {
 			    &Vector3d::new(0., -4., 0.),
 			    &Vector3d::new(0., 0., 0.),
 			),
-			Some((
+			RenderOption::Mesh {
 			    mesh,
 			    color,
-			)),
+			},
 		    );
 		} else {
 		    rigid_body_simulation.add_rigid_body(
@@ -160,10 +164,10 @@ pub fn bounding_box(rigid_body_simulation: &mut impl RigidBodySimulationTrait) {
 			    &Vector3d::new(0., -4., 0.),
 			    &Vector3d::new(0., 0., 0.),
 			),
-			Some((
-			    polyhedron_meshes::cuboid(&dim),
+			RenderOption::Mesh {
+			    mesh: polyhedron_meshes::cuboid(&dim),
 			    color,
-			)),
+			},
 		    );
 		}
 	    }
@@ -180,10 +184,10 @@ pub fn bounding_box(rigid_body_simulation: &mut impl RigidBodySimulationTrait) {
 	    &Vector3d::new(0., -4., 0.),
 	    &Vector3d::new(0., 0., 0.),
 	),
-	Some((
-	    polyhedron_meshes::cuboid(&dim),
-	    Color::rgb(0, 255, 0),
-	)),
+	RenderOption::Mesh {
+	    mesh: polyhedron_meshes::cuboid(&dim),
+	    color: Color::rgb(0, 255, 0),
+	},
     );    
     rigid_body_simulation.add_rigid_body(
 	RigidBody::cuboid(
@@ -194,10 +198,10 @@ pub fn bounding_box(rigid_body_simulation: &mut impl RigidBodySimulationTrait) {
 	    &Vector3d::new(0., -4., 0.),
 	    &Vector3d::new(0., 0., 0.),
 	),
-	Some((
-	    polyhedron_meshes::cuboid(&dim),
-	    Color::rgb(0, 255, 0),
-	)),
+	RenderOption::Mesh {
+	    mesh: polyhedron_meshes::cuboid(&dim),
+	    color: Color::rgb(0, 255, 0),
+	},
     );
     rigid_body_simulation.add_rigid_body(
 	RigidBody::cuboid(
@@ -208,78 +212,78 @@ pub fn bounding_box(rigid_body_simulation: &mut impl RigidBodySimulationTrait) {
 	    &Vector3d::new(0., -4., 0.),
 	    &Vector3d::new(0., 0., 0.),
 	),
-	Some((
-	    polyhedron_meshes::cuboid(&dim),
-	    Color::rgb(0, 255, 0),
-	)),
+	RenderOption::Mesh {
+	    mesh: polyhedron_meshes::cuboid(&dim),
+	    color: Color::rgb(0, 255, 0),
+	},
     );
     
-    let dim = 29.;
-    let dp1 = dim+1.;
+    let dim = 30.;
+    let color = Color::rgb(255, 0, 0);
     rigid_body_simulation.add_rigid_body(
 	RigidBody::cuboid(
 	    &Vector3d::new(dim, dim, dim),
 	    0.,
-	    &Vector3d::new(0., 0., -dp1),
+	    &Vector3d::new(0., 0., -dim),
 	    &Matrix3x3::identity(),
 	    &Vector3d::default(),
 	    &Vector3d::default(),
 	),
-	None,
+	RenderOption::FaceEdges{face_indices: vec![5], color},
     );
     rigid_body_simulation.add_rigid_body(
 	RigidBody::cuboid(
 	    &Vector3d::new(dim, dim, dim),
 	    0.,
-	    &Vector3d::new(0., 0., dp1),
+	    &Vector3d::new(0., 0., dim),
 	    &Matrix3x3::identity(),
 	    &Vector3d::default(),
 	    &Vector3d::default(),
 	),
-	None,
+	RenderOption::FaceEdges{face_indices: vec![4], color},
     );
     rigid_body_simulation.add_rigid_body(
 	RigidBody::cuboid(
 	    &Vector3d::new(dim, dim, dim),
 	    0.,
-	    &Vector3d::new(0., -dp1, 0.),
+	    &Vector3d::new(0., -dim, 0.),
 	    &Matrix3x3::identity(),
 	    &Vector3d::default(),
 	    &Vector3d::default(),
 	),
-	None,
+	RenderOption::FaceEdges{face_indices: vec![3], color},
     );
     rigid_body_simulation.add_rigid_body(
 	RigidBody::cuboid(
 	    &Vector3d::new(dim, dim, dim),
 	    0.,
-	    &Vector3d::new(0., dp1, 0.),
+	    &Vector3d::new(0., dim, 0.),
 	    &Matrix3x3::identity(),
 	    &Vector3d::default(),
 	    &Vector3d::default(),
 	),
-	None,
+	RenderOption::FaceEdges{face_indices: vec![2], color},
     );
     rigid_body_simulation.add_rigid_body(
 	RigidBody::cuboid(
 	    &Vector3d::new(dim, dim, dim),
 	    0.,
-	    &Vector3d::new(-dp1, 0., 0.),
+	    &Vector3d::new(-dim, 0., 0.),
 	    &Matrix3x3::identity(),
 	    &Vector3d::default(),
 	    &Vector3d::default(),
 	),
-	None,
+	RenderOption::FaceEdges{face_indices: vec![1], color},
     );
     rigid_body_simulation.add_rigid_body(
 	RigidBody::cuboid(
 	    &Vector3d::new(dim, dim, dim),
 	    0.,
-	    &Vector3d::new(dp1, 0., 0.),
+	    &Vector3d::new(dim, 0., 0.),
 	    &Matrix3x3::identity(),
 	    &Vector3d::default(),
 	    &Vector3d::default(),
 	),
-	None,
+	RenderOption::FaceEdges{face_indices: vec![0], color},
     );
 }

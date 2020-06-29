@@ -141,7 +141,7 @@ impl ScreenBuffer {
 	);
     }
 
-    pub fn draw_triangle_lines(
+    pub fn draw_triangle_edges(
 	&mut self,
 	triangle: &Triangle3d,
 	color: Color,
