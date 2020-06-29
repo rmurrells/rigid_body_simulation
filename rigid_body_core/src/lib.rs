@@ -104,9 +104,9 @@ impl RigidBodySimulationCore {
     fn render(&mut self) {
 	self.renderer.clear(Color::rgb(0, 0, 0));
 	if self.debug {
-	    self.renderer.render_rigid_bodies_debug(&self.simulation);
+	    self.renderer.render_simulation_debug(&self.simulation);
 	} else {
-	    self.renderer.render_rigid_bodies(&self.simulation.rigid_bodies);
+	    self.renderer.render_simulation(&self.simulation);
 	}
     }
 }
@@ -124,7 +124,7 @@ pub trait RigidBodySimulationTrait: RigidBodySimulationCoreAccess {
 	let core = self.rigid_body_simulation_core_access();
         let uid = rigid_body.uid();
         core.simulation.add_rigid_body(rigid_body);
-        core.renderer.add_mesh(uid, render_opt);
+        core.renderer.add_uid(uid, render_opt);
     }
 
     fn camera_mover_mut(&mut self) -> &mut CameraMover {
@@ -135,6 +135,25 @@ pub trait RigidBodySimulationTrait: RigidBodySimulationCoreAccess {
         self.rigid_body_simulation_core_access().renderer.camera_mut()
     }
 
+    fn set_bounding_box(
+	&mut self, opt: &Option<(Vector3d, Vector3d, Color)>,
+    ) {
+	let core = &mut self.rigid_body_simulation_core_access();
+	let simulation = &mut core.simulation;
+	simulation.set_bounding_box(&opt.map(|inner| (inner.0, inner.1)));
+	if let Some((_, _, color)) = opt {
+	    let bounding_box = &simulation.bounding_box();
+	    core.renderer.add_uid(
+		bounding_box.uid, RenderOption::PolyhedronEdges{color: *color},
+	    );
+	    for uid in &simulation.bounding_box()
+		.inner_opt.as_ref().unwrap().rigid_body_uids
+	    {
+		core.renderer.add_uid(*uid, RenderOption::Invisible);
+	    }
+	}
+    }	
+    
     fn set_debug(&mut self, set: bool) {
 	self.rigid_body_simulation_core_access().debug = set;
     }

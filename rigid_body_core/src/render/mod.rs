@@ -13,12 +13,14 @@ pub use screen_buffer::{
 use crate::{
     math::{
 	matrix_vector,
+	matrix::Matrix3x3,
 	polyhedron::Polyhedron,
 	rotation_matrix,
 	vector::Vector3d,
     },
     mesh::Mesh,
     simulation::{
+	bounding_box::BoundingBox,
 	rigid_body::RigidBody,
 	Simulation,
     },
@@ -36,39 +38,44 @@ use screen_buffer::{
 };
 use std::f64::consts::PI;
 
-type MeshMap = IntMap<UID, RenderOption>;
+type RenderMap = IntMap<UID, RenderOption>;
 
 pub enum RenderOption {
+    Invisible,
+    FaceEdges{face_indices: Vec<usize>, color: Color},
     Mesh{mesh: Mesh, color: Color},
     PolyhedronEdges{color: Color},
-    FaceEdges{face_indices: Vec<usize>, color: Color},
     None,
 }
 
 pub struct RendererCore {
     draw_3d: Draw3d,
-    mesh_map: MeshMap,
+    render_map: RenderMap,
 }
 
 impl RendererCore {
     pub fn new(window_size: (u32, u32)) -> Self {
 	Self {
 	    draw_3d: Draw3d::new(window_size),
-	    mesh_map: MeshMap::default(),
+	    render_map: RenderMap::default(),
 	}
     }
 
-    pub fn add_mesh(&mut self, uid: UID, render_option: RenderOption) {
-	self.mesh_map.insert(uid, render_option);
+    pub fn add_uid(&mut self, uid: UID, render_option: RenderOption) {
+	self.render_map.insert(uid, render_option);
     }
     
-    pub fn render_rigid_bodies(&mut self, rigid_bodies: &[RigidBody]) {
-	for rigid_body in rigid_bodies {
+    pub fn render_simulation(&mut self, simulation: &Simulation) {
+	for rigid_body in &simulation.rigid_bodies {
 	    self.draw_rigid_body(rigid_body, &None);	    
+	}
+	let bounding_box = simulation.bounding_box();
+	if bounding_box.inner_opt.is_some() {
+	    self.draw_bounding_box(bounding_box);
 	}
     }
     
-    pub fn render_rigid_bodies_debug(
+    pub fn render_simulation_debug(
 	&mut self, simulation: &Simulation,
     ) {
 	for (i, rigid_body) in simulation.rigid_bodies.iter().enumerate() {
@@ -175,7 +182,7 @@ impl RendererCore {
 	color_opt: &Option<Color>,
     ) {
 	Self::draw_mesh_triangles_impl(
-	    rigid_body, color_opt, &self.mesh_map, &mut self.draw_3d,
+	    rigid_body, color_opt, &self.render_map, &mut self.draw_3d,
 	);
     }
     
@@ -185,8 +192,43 @@ impl RendererCore {
 	color_opt: &Option<Color>,
     ) {
 	Self::draw_rigid_body_impl(
-	    rigid_body, color_opt, &self.mesh_map, &mut self.draw_3d,
+	    rigid_body, color_opt, &self.render_map, &mut self.draw_3d,
 	);
+    }
+
+    fn draw_bounding_box(&mut self, bounding_box: &BoundingBox) {
+	Self::draw_bounding_box_impl(
+	    bounding_box, &self.render_map, &mut self.draw_3d,
+	);
+    }
+    
+    fn draw_bounding_box_impl(
+	bounding_box: &BoundingBox,
+	render_map: &RenderMap,
+	draw_3d: &mut Draw3d,
+    ) {
+	let dimensions = &bounding_box.inner_opt.as_ref().unwrap().dimensions;
+	match render_map.get(&bounding_box.uid) {
+	    Some(render_option) => match render_option {
+		RenderOption::Mesh{mesh, color} => draw_3d.draw_mesh(
+		    mesh,
+		    &dimensions[0].add(&dimensions[1]).scale(0.5),
+		    &Matrix3x3::identity(),
+		    *color,
+		),
+		RenderOption::None => Self::draw_bounding_box_default(
+		    &dimensions[0], &dimensions[1], draw_3d,
+		),
+		RenderOption::PolyhedronEdges{color} =>
+		    draw_3d.draw_aligned_cuboid(
+			&dimensions[0], &dimensions[1], *color,
+		    ),
+		_ => (),
+	    }
+	    None => Self::draw_bounding_box_default(
+		&dimensions[0], &dimensions[1], draw_3d,
+	    ),
+	}
     }
     
     fn draw_edge_plane(
@@ -228,7 +270,13 @@ impl RendererCore {
 	}
     }
 
-    fn draw_default(
+    fn draw_bounding_box_default(
+	min: &Vector3d, max: &Vector3d, draw_3d: &mut Draw3d,
+    ) {
+	draw_3d.draw_aligned_cuboid(min, max, Color::rgb(255, 0, 255));
+    }
+    
+    fn draw_rigid_body_default(
 	rigid_body: &RigidBody, color_opt: &Option<Color>, draw_3d: &mut Draw3d,
     ) {
 	draw_3d.draw_polyhedron_edges(
@@ -263,10 +311,10 @@ impl RendererCore {
     fn draw_mesh_triangles_impl(
 	rigid_body: &RigidBody,
 	color_opt: &Option<Color>,
-	mesh_map: &MeshMap,
+	render_map: &RenderMap,
 	draw_3d: &mut Draw3d,
     ) {
-	if let Some(render_option) = mesh_map.get(&rigid_body.uid()) {
+	if let Some(render_option) = render_map.get(&rigid_body.uid()) {
 	    if let RenderOption::Mesh{mesh, color} = render_option {
 		draw_3d.draw_mesh_lines(
 		    mesh,
@@ -285,11 +333,26 @@ impl RendererCore {
     fn draw_rigid_body_impl(
 	rigid_body: &RigidBody,
 	color_opt: &Option<Color>,
-	mesh_map: &MeshMap,
+	render_map: &RenderMap,
 	draw_3d: &mut Draw3d,
     ) {
-	match mesh_map.get(&rigid_body.uid()) {
+	match render_map.get(&rigid_body.uid()) {
 	    Some(render_option) => match render_option {
+		RenderOption::Invisible => (),
+		RenderOption::FaceEdges{face_indices, color} => {
+		    for face_index in face_indices {
+			Self::draw_face_edges(
+			    rigid_body.polyhedron_world(),
+			    *face_index,
+ 			    *match color_opt {
+				Some(opt_color) => opt_color,
+				None => color,
+			    },
+			    false,
+			    draw_3d,
+			);
+		    }
+		}
 		RenderOption::Mesh{mesh, color} => {
 		    draw_3d.draw_mesh(
 			mesh,
@@ -310,24 +373,13 @@ impl RendererCore {
 			}
 		    );   
 		}
-		RenderOption::FaceEdges{face_indices, color} => {
-		    for face_index in face_indices {
-			Self::draw_face_edges(
-			    rigid_body.polyhedron_world(),
-			    *face_index,
- 			    *match color_opt {
-				Some(opt_color) => opt_color,
-				None => color,
-			    },
-			    false,
-			    draw_3d,
-			);
-		    }
-		}
-		RenderOption::None =>
-		    Self::draw_default(rigid_body, color_opt, draw_3d),
+		RenderOption::None => Self::draw_rigid_body_default(
+		    rigid_body, color_opt, draw_3d,
+		),
 	    },
-	    None => Self::draw_default(rigid_body, color_opt, draw_3d),
+	    None => Self::draw_rigid_body_default(
+		rigid_body, color_opt, draw_3d,
+	    ),
 	}
     }    
 }
