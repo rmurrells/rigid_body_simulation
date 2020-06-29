@@ -44,7 +44,7 @@ impl Simulation {
     }
     
     pub fn set_bounding_box(
-	&mut self, dimensions_opt: &Option<(Vector3d, Vector3d)>,
+	&mut self, dimensions_opt: &Option<(&Vector3d, &Vector3d)>,
     ) {
 	self.bounding_box.set(
 	    dimensions_opt,

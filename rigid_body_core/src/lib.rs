@@ -136,21 +136,22 @@ pub trait RigidBodySimulationTrait: RigidBodySimulationCoreAccess {
     }
 
     fn set_bounding_box(
-	&mut self, opt: &Option<(Vector3d, Vector3d, Color)>,
+	&mut self, opt: Option<(&Vector3d, &Vector3d, RenderOption)>,
     ) {
 	let core = &mut self.rigid_body_simulation_core_access();
 	let simulation = &mut core.simulation;
-	simulation.set_bounding_box(&opt.map(|inner| (inner.0, inner.1)));
-	if let Some((_, _, color)) = opt {
-	    let bounding_box = &simulation.bounding_box();
-	    core.renderer.add_uid(
-		bounding_box.uid, RenderOption::PolyhedronEdges{color: *color},
-	    );
-	    for uid in &simulation.bounding_box()
-		.inner_opt.as_ref().unwrap().rigid_body_uids
-	    {
-		core.renderer.add_uid(*uid, RenderOption::Invisible);
+	match opt {
+	    Some((min, max, render_opt)) => {
+		simulation.set_bounding_box(&Some((min, max)));
+		let bounding_box = &simulation.bounding_box();
+		core.renderer.add_uid(bounding_box.uid, render_opt);
+		for uid in &simulation.bounding_box()
+		    .inner_opt.as_ref().unwrap().rigid_body_uids
+		{
+		    core.renderer.add_uid(*uid, RenderOption::Invisible);
+		}
 	    }
+	    None => simulation.set_bounding_box(&None),
 	}
     }	
     

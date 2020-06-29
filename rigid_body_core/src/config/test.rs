@@ -121,12 +121,12 @@ pub fn coincident(rigid_body_simulation: &mut impl RigidBodySimulationTrait) {
 pub fn bounding_box(rigid_body_simulation: &mut impl RigidBodySimulationTrait) {
     rigid_body_simulation.camera_mut().position = Vector3d::new(0., 0., -30.);
     let bbhd = 15.;
-    rigid_body_simulation.set_bounding_box(&Some((
-	Vector3d::new(-bbhd, -bbhd, -bbhd),
-	Vector3d::new(bbhd, bbhd, bbhd),
-	Color::rgb(255, 0, 0),
+    rigid_body_simulation.set_bounding_box(Some((
+	&Vector3d::new(-bbhd, -bbhd, -bbhd),
+	&Vector3d::new(bbhd, bbhd, bbhd),
+	RenderOption::PolyhedronEdges{color: Color::rgb(255, 0, 0)},
     )));
-    
+
     let radius = 2.25;
     let mass_inv = 1.;
     let mi_inv = moment_of_intertia::solid_sphere(
@@ -154,10 +154,7 @@ pub fn bounding_box(rigid_body_simulation: &mut impl RigidBodySimulationTrait) {
 			    &Vector3d::new(0., -4., 0.),
 			    &Vector3d::new(0., 0., 0.),
 			),
-			RenderOption::Mesh {
-			    mesh,
-			    color,
-			},
+			RenderOption::Mesh{mesh, color},
 		    );
 		} else {
 		    rigid_body_simulation.add_rigid_body(

@@ -27,7 +27,7 @@ impl BoundingBox {
 
     pub fn set(
 	&mut self,
-	dimensions_opt: &Option<(Vector3d, Vector3d)>,
+	dimensions_opt: &Option<(&Vector3d, &Vector3d)>,
 	initial_rigid_bodies: &mut Vec<RigidBody>,
 	rigid_bodies: &mut Vec<RigidBody>,
     ) {
@@ -78,7 +78,7 @@ impl BoundingBox {
 	    add_bounding_box_cuboid(&Vector3d::new(x-xd, y, z));
 	    add_bounding_box_cuboid(&Vector3d::new(x+xd, y, z));
 	    self.inner_opt = Some(BoundingBoxInner {
-		dimensions: [*min, *max], rigid_body_uids,
+		dimensions: [**min, **max], rigid_body_uids,
 	    });
 	}
     }
