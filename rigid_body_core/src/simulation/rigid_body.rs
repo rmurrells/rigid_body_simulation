@@ -2,7 +2,7 @@ use crate::{
     math::{
 	matrix::Matrix3x3,
 	matrix_vector,
-	moment_of_intertia,
+	moment_of_inertia,
 	polyhedron::{
 	    Edge,
 	    Polyhedron,
@@ -99,7 +99,7 @@ impl RigidBody {
 	Self::new(
 	    mass_inv,
 	    &if mass_inv >= EPSILON {
-		moment_of_intertia::aligned_cuboid(
+		moment_of_inertia::aligned_cuboid(
 		    dimensions, 1./mass_inv,
 		).inverse().expect(
 		    "cuboid - inertia_body inverse",

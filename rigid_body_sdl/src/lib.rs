@@ -1,6 +1,17 @@
+pub mod render;
 mod input;
-mod render;
 
+pub use rigid_body_core::{
+    config,
+    input::camera_mover::{
+	CameraMode,
+	CameraMover,
+    },
+    math,
+    mesh,
+    rigid_body,
+    RigidBodySimulationTrait,
+};
 use input::InputSDL;
 use render::RendererSDL;
 use rigid_body_core::{
@@ -10,15 +21,7 @@ use rigid_body_core::{
 };
 use sdl2::Sdl;
 
-pub use rigid_body_core::{
-    config,
-    input::camera_mover::CameraMode,
-    math,
-    mesh,
-    rigid_body::RigidBody,
-    RigidBodySimulationTrait,
-};
-pub use render::StrResult;
+pub type StrResult<T> = Result<T, String>;
 
 pub struct RigidBodySimulationSDL {
     rigid_body_simulation_core: RigidBodySimulationCore,

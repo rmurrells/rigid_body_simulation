@@ -1,6 +1,6 @@
 use crate::{
     math::{
-	moment_of_intertia,
+	moment_of_inertia,
 	rotation_matrix,
 	matrix::Matrix3x3,
 	vector::Vector3d,
@@ -49,7 +49,7 @@ pub fn immovable(rigid_body_simulation: &mut impl RigidBodySimulationTrait) {
 pub fn icosphere(rigid_body_simulation: &mut impl RigidBodySimulationTrait, sd: u8) {
     let mesh = polyhedron_meshes::icosphere(5., sd);
     let mass_inv = 1.;
-    let mi_inv = moment_of_intertia::solid_sphere(
+    let mi_inv = moment_of_inertia::solid_sphere(
 	5., 1./mass_inv,
     ).inverse().expect("mi_inv");
 
@@ -129,7 +129,7 @@ pub fn bounding_box(rigid_body_simulation: &mut impl RigidBodySimulationTrait) {
 
     let radius = 2.25;
     let mass_inv = 1.;
-    let mi_inv = moment_of_intertia::solid_sphere(
+    let mi_inv = moment_of_inertia::solid_sphere(
 	radius, 1./mass_inv,
     ).inverse().expect("mi_inv");
     

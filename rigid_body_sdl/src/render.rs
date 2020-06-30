@@ -1,4 +1,9 @@
 #![allow(dead_code)]
+pub use rigid_body_core::render::{
+    Color,
+    RenderOption,
+};
+use crate::StrResult;
 use rigid_body_core::render::PIXEL_FORMAT;
 use sdl2::{
     IntegerOrSdlError,
@@ -15,7 +20,6 @@ use sdl2::{
 };
 
 type SurfaceCanvas<'a> = Canvas<Surface<'a>>;
-pub type StrResult<T> = Result<T, String>;
 
 pub struct RendererSDL {
     texture_creator: TextureCreator<WindowContext>,
