@@ -17,7 +17,7 @@ use crate::{
 };
 
 pub fn default(
-    rigid_body_simulation: &mut impl RigidBodySimulationTrait,
+    n: usize, rigid_body_simulation: &mut impl RigidBodySimulationTrait,
 ) -> Result<(), String> {
     let bb_dim = 50.;
     let bb_dim = Vector3d::new(bb_dim, bb_dim, bb_dim);
@@ -37,7 +37,6 @@ pub fn default(
 	radius, 1./mass_inv,
     ).inverse().expect("mi_inv");
 
-    let n = 8;
     let get_pos = |axis: usize, index: usize, current: &mut f64| {
 	let gap = (bb_dim[axis]-dim[axis]*n as f64)/(n+1) as f64;
 	*current += gap+dim[axis]*if index == 0 {0.5} else{1.}

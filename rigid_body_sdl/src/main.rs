@@ -6,7 +6,7 @@ use rigid_body_sdl::{
 
 fn main() -> StrResult<()> {
     let mut rigid_body_simulation = RigidBodySimulationSDL::new((800, 600))?;
-    config::default(&mut rigid_body_simulation)?;
+    config::default(8, &mut rigid_body_simulation)?;
     while rigid_body_simulation.tick()?{}
     Ok(())
 }

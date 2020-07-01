@@ -13,7 +13,7 @@ use std::time::Duration;
 fn criterion_benchmark(c: &mut Criterion) {
     let mut rigid_body = RigidBodySimulationSDL::new((800, 600)).unwrap();
     rigid_body.set_fps(0);
-    config::default(&mut rigid_body).unwrap();
+    config::default(8, &mut rigid_body).unwrap();
     
     let mut group = c.benchmark_group("bgroup");
     group.measurement_time(Duration::from_secs(30));

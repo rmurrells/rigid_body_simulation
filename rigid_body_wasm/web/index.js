@@ -8,7 +8,7 @@ var ctx = canvas.getContext('2d');
 var id = canvas.getContext('2d').getImageData(
     0, 0, canvas.width, canvas.height,
 );
-var rigid_body_wasm = init(canvas.width, canvas.height);
+var rigid_body_wasm = init(canvas.width, canvas.height, 6);
 
 function main() {
     setInterval(run, 1000./60);
