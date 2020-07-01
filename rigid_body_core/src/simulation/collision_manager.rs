@@ -27,6 +27,7 @@ const COLLISION_EPSILON: f64 = 1e-3;
 const COR: f64 = 1.;
 
 pub struct CollisionManager {
+    pub debug: bool,
     bounding_box_collision_manager: BoundingBoxCollisionManager,
     collision_table: CollisionTable,
 }
@@ -34,6 +35,7 @@ pub struct CollisionManager {
 impl CollisionManager {
     pub fn new() -> Self {
 	Self {
+	    debug: true,
 	    bounding_box_collision_manager: BoundingBoxCollisionManager::new(
 		COLLISION_EPSILON,
 	    ),
@@ -653,7 +655,7 @@ impl CollisionManager {
 		contacts: &mut collision_status.contacts
 	    },
 	);
-	if collision_status.contacts.is_empty() {
+	if self.debug && collision_status.contacts.is_empty() {
 	    println!("closest_distance - Contacts");
 	}
 	Self::contact_forces_simple(
@@ -677,11 +679,13 @@ impl CollisionManager {
 	let mut dist = MAX;
 	while dist >= COLLISION_EPSILON {
 	    if bisect.abs() < EPSILON {
-		println!(
-		    "de_penetrate_dir failiure - bisect ({} {})",
-		    rigid_body_1_index,
-		    rigid_body_2_index,
-		);
+		if self.debug {
+		    println!(
+			"de_penetrate_dir failiure - bisect ({} {})",
+			rigid_body_1_index,
+			rigid_body_2_index,
+		    );
+		}
 		return;
 	    }
 	    let separation = separating_dir.scale(bisect);
@@ -703,13 +707,17 @@ impl CollisionManager {
 		    &mut Mode::ClosestDist{dist: &mut dist},
 		);
 		if dist == MAX {
-		    println!("de_penetrate_dir failiure - plane");
+		    if self.debug {
+			println!("de_penetrate_dir failiure - plane");
+		    }
 		    return;
 		}
 		bisect = bisect.copysign(-1.);
 	    } else {
 		if dist == MAX {
-		    println!("de_penetrate_dir failiure - no plane");
+		    if self.debug {
+			println!("de_penetrate_dir failiure - no plane");
+		    }
 		    return;
 		}
 		bisect = bisect.copysign(1.);

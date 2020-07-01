@@ -44,10 +44,10 @@ fn get_new_uid() -> UID {
 }
 
 pub struct RigidBodySimulationCore {
-    pub debug: bool,
     pub input: InputCore,
     pub camera_mover: CameraMover,
     pub renderer: RendererCore,
+    pub debug: bool,
     simulation: Simulation,
     fps_manager_opt: Option<FPSManager>,
 }
@@ -55,9 +55,9 @@ pub struct RigidBodySimulationCore {
 impl RigidBodySimulationCore {
     pub fn new(window_size: (u32, u32)) -> Self {
 	Self {
-	    debug: false,
 	    input: InputCore::default(),
 	    renderer: RendererCore::new(window_size),
+	    debug: false,
 	    simulation: Simulation::default(),
 	    camera_mover: CameraMover {
                 center: Vector3d::default(),
