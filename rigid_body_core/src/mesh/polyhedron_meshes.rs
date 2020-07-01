@@ -125,3 +125,22 @@ pub fn regular_icosahedron(size: f64) -> Mesh {
     ];
     Mesh::new(vertices, mesh_triangles)
 }
+
+pub fn regular_tetrahedron(size: f64) -> Mesh {
+    let ot = 1./3.;
+    let stt = (2f64/3.).sqrt();
+    let stn = (2f64/9.).sqrt();
+    let vertices = vec![
+	Vector3d::new((8f64/9.).sqrt(), 0., -ot).scale(size),
+	Vector3d::new(-stn, stt, -ot).scale(size),
+	Vector3d::new(-stn, -stt, -ot).scale(size),
+	Vector3d::new(0., 0., size),
+    ];
+    let mesh_triangles = vec![
+	MeshTriangle::norm_from_vertices(&vertices, &[0, 2, 1]),
+	MeshTriangle::norm_from_vertices(&vertices, &[0, 1, 3]),
+	MeshTriangle::norm_from_vertices(&vertices, &[0, 3, 2]),
+	MeshTriangle::norm_from_vertices(&vertices, &[1, 2, 3]),
+    ];
+    Mesh::new(vertices, mesh_triangles)
+}

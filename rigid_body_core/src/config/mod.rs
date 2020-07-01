@@ -19,7 +19,8 @@ use crate::{
 pub fn default(
     rigid_body_simulation: &mut impl RigidBodySimulationTrait,
 ) -> Result<(), String> {
-    let bb_dim = Vector3d::new(40., 40., 40.);
+    let bb_dim = 50.;
+    let bb_dim = Vector3d::new(bb_dim, bb_dim, bb_dim);
     let bb_min = bb_dim.scale(-0.5);
     let bb_max = bb_dim.scale(0.5);
     rigid_body_simulation.set_bounding_box(Some((
@@ -36,13 +37,14 @@ pub fn default(
 	radius, 1./mass_inv,
     ).inverse().expect("mi_inv");
 
-    let n = 6;
+    let n = 8;
     let get_pos = |axis: usize, index: usize, current: &mut f64| {
 	let gap = (bb_dim[axis]-dim[axis]*n as f64)/(n+1) as f64;
 	*current += gap+dim[axis]*if index == 0 {0.5} else{1.}
     };
 
-    let icosphere_mesh = polyhedron_meshes::regular_icosahedron(radius);
+    let icosahedron_mesh = polyhedron_meshes::regular_icosahedron(radius);
+    let tetrahedron_mesh = polyhedron_meshes::regular_tetrahedron(radius);
     let mut color_increment = ColorIncrement::new(n*n*n);
     
     let mut x = bb_min[0];
@@ -54,7 +56,7 @@ pub fn default(
 	    let mut z = bb_min[1];
 	    for k in 0..n {
 		get_pos(2, k, &mut z);
-		if j%2 == 0 {
+		if j%3 == 0 {
 		    rigid_body_simulation.add_rigid_body(
 			RigidBody::cuboid(
 			    &dim,
@@ -69,10 +71,10 @@ pub fn default(
 			    color: color_increment.get(),
 			},
 		    );
-		} else {
+		} else if j%3 == 1 {
 		    rigid_body_simulation.add_rigid_body(
 			RigidBody::from_mesh(
-			    &icosphere_mesh,
+			    &icosahedron_mesh,
 			    mass_inv,
 			    &sphere_mi_inv,
 			    &Vector3d::new(x, y, z),
@@ -81,10 +83,26 @@ pub fn default(
 			    &Vector3d::new(0., 0., 0.),
 			)?,
 			RenderOption::Mesh {
-			    mesh: icosphere_mesh.clone(),
+			    mesh: icosahedron_mesh.clone(),
 			    color: color_increment.get(),
 			},
 		    );
+		} else if j%3 == 2 {
+		    rigid_body_simulation.add_rigid_body(
+			RigidBody::from_mesh(
+			    &tetrahedron_mesh,
+			    mass_inv,
+			    &sphere_mi_inv,
+			    &Vector3d::new(x, y, z),
+			    &Matrix3x3::identity(),
+			    &Vector3d::new(0., -4., 0.),
+			    &Vector3d::new(0., 0., 0.),
+			)?,
+			RenderOption::Mesh {
+			    mesh: tetrahedron_mesh.clone(),
+			    color: color_increment.get(),
+			},
+		    );		    
 		}
 	    }
 	}
@@ -93,33 +111,35 @@ pub fn default(
 }
 
 pub struct ColorIncrement {
-    count: usize,
     n: usize,
+    colors: Vec<Color>,
+    count: usize,
 }
 
 impl ColorIncrement {
     pub fn new(n: usize) -> Self {
+	let mut colors = Vec::with_capacity(1021);
+	let mut color = Color::rgb(255, 0, 0);
+	let cap = colors.capacity();
+	let cap4 = cap/4;
+	for i in 0..cap {
+	    colors.push(color);
+	    if i < cap4 {color.g += 1;}
+	    else if i < cap4*2 {color.r -= 1;}
+	    else if i < cap4*3 {color.b += 1;}
+	    else if i < cap {color.g -= 1;}
+	    else {unreachable!();}
+	}
 	Self {
 	    count: 0,
 	    n,
+	    colors,
 	}
     }
 
     pub fn get(&mut self) -> Color {
-	let mut color = Color::rgb(255, 0, 0);
-	for i in 0..self.count*1024/self.n {
-	    match i/255 {
-		0 => color.g += 1,
-		1 => color.r -= 1,
-		2 => color.b += 1,
-		3 => color.g -= 1,
-		_ => {
-		    println!("Error, switch exceeds 3");
-		    return color;
-		}
-	    }
-	}
+	let index = self.count*self.colors.len()/self.n;
 	self.count += 1;
-	color
+	self.colors[index]
     }
 }
