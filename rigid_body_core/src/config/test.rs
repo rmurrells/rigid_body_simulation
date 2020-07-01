@@ -155,6 +155,34 @@ pub fn coincident(rigid_body_simulation: &mut impl RigidBodySimulationTrait) {
     );
 }
 
+pub fn icosphere(
+    n: u8, rigid_body_simulation: &mut impl RigidBodySimulationTrait,
+) -> Result<(), String> {
+    rigid_body_simulation.camera_mut().position = Vector3d::new(0., 0., -10.);
+    let mesh = polyhedron_meshes::icosphere(5., n);
+    let mass_inv = 1.;
+    let mi_inv = moment_of_inertia::solid_sphere(
+	5., 1./mass_inv,
+    ).inverse().expect("mi_inv");
+
+    rigid_body_simulation.add_rigid_body(
+	RigidBody::from_mesh(
+	    &mesh,
+	    mass_inv,
+	    &mi_inv,
+	    &Vector3d::new(0., 0., 0.),
+	    &Matrix3x3::identity(),
+	    &Vector3d::new(0., 0., 0.),
+	    &Vector3d::new(1., 1., 1.),	
+	)?,
+ 	RenderOption::Mesh {
+	    mesh: mesh.clone(),
+	    color: Color::rgb(0, 255, 0),
+	},
+    );
+    Ok(())    
+}
+
 pub fn immovable(rigid_body_simulation: &mut impl RigidBodySimulationTrait) {
     rigid_body_simulation.camera_mut().position = Vector3d::new(0., 0., -10.);
     let mass_inv = 1.;
