@@ -13,10 +13,13 @@ use crate::{
     mesh::Mesh,
     UID,
 };
-use std::f64::{
-    EPSILON,
-    MAX,
-    MIN,
+use std::{
+    collections::HashSet,
+    f64::{
+	EPSILON,
+	MAX,
+	MIN,
+    },
 };
 
 pub type BoundingBox = [Vector3d; 2];
@@ -123,34 +126,38 @@ impl RigidBody {
 	rotation: &Matrix3x3,
 	momentum: &Vector3d,
 	angular_momentum: &Vector3d,
-    ) -> Self {
+    ) -> Result<Self, String> {
 	let mesh_len = mesh.mesh_triangles.len();
-	let mut vertices = Vec::with_capacity(mesh_len*3);
 	let mut edges = Vec::with_capacity(mesh_len*3);
 	let mut face_vertex_indices = Vec::with_capacity(mesh_len);
+	let mut edge_set = HashSet::<(usize, usize)>::default();
+
 	for mesh_triangle in &mesh.mesh_triangles {
-	    let mut indices = Vec::with_capacity(3);
-	    for vertex in &mesh_triangle.triangle_3d.vertices {
-		vertices.push(*vertex);
-		indices.push(vertices.len()-1);
+	    let mut vertex_indices = Vec::with_capacity(3);
+	    for vertex_index in &mesh_triangle.vertex_indices {
+		vertex_indices.push(*vertex_index);
 	    }
-	    let len = vertices.len();
-	    edges.push(Edge::new(len-1, len-2, &vertices));
-	    edges.push(Edge::new(len-2, len-3, &vertices));
-	    edges.push(Edge::new(len-3, len-1, &vertices));
-	    face_vertex_indices.push(indices);
+	    let mut add_edge = |i: usize, j: usize| {
+		if edge_set.insert((i, j)) && edge_set.insert((j, i)) {
+		    edges.push(Edge::new(i, j, &mesh.vertices));
+		}
+	    };
+	    add_edge(vertex_indices[2], vertex_indices[1]);
+	    add_edge(vertex_indices[1], vertex_indices[0]);
+	    add_edge(vertex_indices[0], vertex_indices[2]);
+	    face_vertex_indices.push(vertex_indices);
 	}
-	Self::new(
+	Ok(Self::new(
 	    mass_inv,
 	    inertia_body_inv,
 	    Polyhedron::new(
-		edges, vertices, face_vertex_indices,
-	    ),
+		face_vertex_indices, edges, mesh.vertices.clone(), 
+	    )?,
 	    position,
 	    rotation,
 	    momentum,
 	    angular_momentum,
-	)
+	))
     }
     
     pub fn angular_velocity(&self) -> &Vector3d {

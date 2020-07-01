@@ -118,7 +118,7 @@ pub trait Draw3dTrait: Draw3dAccess {
     ) {
 	let draw_3d = self.draw_3d_access_mut();
 	for window_triangle in draw_3d.render_object_creator.get_window_triangles(
-	    &mesh.mesh_triangles,
+	    &mesh,
 	    world_position,
 	    world_orientation,
 	    &draw_3d.camera,
@@ -142,7 +142,7 @@ pub trait Draw3dTrait: Draw3dAccess {
     ) {
 	let draw_3d = self.draw_3d_access_mut();
 	for window_triangle in draw_3d.render_object_creator.get_window_triangles(
-	    &mesh.mesh_triangles,
+	    &mesh,
 	    world_position,
 	    world_orientation,
 	    &draw_3d.camera,

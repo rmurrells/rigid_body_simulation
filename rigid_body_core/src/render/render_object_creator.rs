@@ -21,7 +21,10 @@ use crate::{
 	    Vector4d,
 	},
     },
-    mesh::MeshTriangle,
+    mesh::{
+	Mesh,
+	MeshTriangle,
+    },
 };
 use std::f64::EPSILON;
 
@@ -146,33 +149,38 @@ impl RenderObjectCreator {
     
     pub fn get_window_triangles(
 	&self,
-	mesh_triangles: &[MeshTriangle],
+	mesh: &Mesh,
 	world_position: &Vector3d,
 	world_orientation: &Matrix3x3,
 	camera: &Camera,
     ) -> Vec<RenderTriangle> {
-	let mut ret = Vec::with_capacity(mesh_triangles.len());
-	for mesh_triangle in mesh_triangles {
-	    let world_mesh_triangle = {
-		let vertices = &mesh_triangle.triangle_3d.vertices;
-		MeshTriangle::norm_from_vertices(
-		    &matrix_vector::mult_3(
-			&world_orientation, &vertices[0],
-		    ).add(&world_position),
-		    &matrix_vector::mult_3(
-			&world_orientation, &vertices[1],
-		    ).add(&world_position),
-		    &matrix_vector::mult_3(
-			&world_orientation, &vertices[2],
-		    ).add(&world_position),
-		)
-	    };
-
-	    if world_mesh_triangle.normal.dot(&camera.position.sub(
-		&world_mesh_triangle.triangle_3d.vertices[0],
+	let mut ret = Vec::with_capacity(mesh.mesh_triangles.len());
+	for mesh_triangle in &mesh.mesh_triangles {
+	    let world_triangle = Triangle3d::new(
+		&matrix_vector::mult_3(
+		    &world_orientation,
+		    &mesh.vertices[mesh_triangle.vertex_indices[0]],
+		).add(&world_position),
+		&matrix_vector::mult_3(
+		    &world_orientation,
+		    &mesh.vertices[mesh_triangle.vertex_indices[1]],
+		).add(&world_position),
+		&matrix_vector::mult_3(
+		    &world_orientation,
+		    &mesh.vertices[mesh_triangle.vertex_indices[2]],
+		).add(&world_position),
+	    );
+	    let world_normal = MeshTriangle::normal(
+		&world_triangle.vertices[0],
+		&world_triangle.vertices[1],
+		&world_triangle.vertices[2],
+	    );
+	    
+	    if world_normal.dot(&camera.position.sub(
+		&world_triangle.vertices[0],
 	    )) < 0. {continue;}
 	    let camera_triangle = Self::camera_triangle(
-		camera, &world_mesh_triangle.triangle_3d,
+		camera, &world_triangle,
 	    );
 
 	    let mut add_render_triangle = |render_triangle: &RenderTriangle| {
@@ -182,11 +190,11 @@ impl RenderObjectCreator {
 		    Self::dehomogenized_triangle(&projected_triangle);
 		ret.push(RenderTriangle::new(
 		    &dehomogenized_triangle,
-		    world_mesh_triangle.normal.dot(camera.dir()),
+		    world_normal.dot(camera.dir()),
 		));
 	    };
 	    
-	    let light_value = world_mesh_triangle.normal.dot(camera.dir());
+	    let light_value = world_normal.dot(camera.dir());
 	    match self.clip_triangle_on_plane(
 		&RenderTriangle::new(
 		    &camera_triangle,

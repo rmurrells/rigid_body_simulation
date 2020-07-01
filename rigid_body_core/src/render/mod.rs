@@ -21,6 +21,7 @@ use crate::{
     mesh::Mesh,
     simulation::{
 	bounding_box::BoundingBox,
+	Contact,
 	rigid_body::RigidBody,
 	Simulation,
     },
@@ -102,74 +103,98 @@ impl RendererCore {
 	}
 	for i in 1..simulation.rigid_bodies.len() {
 	    for j in 0..i {
+		if simulation.rigid_bodies[i].is_immovable() &&
+		    simulation.rigid_bodies[j].is_immovable()
+		{
+		    continue;
+		}
 		let collision_status = simulation
 		    .collision_manager
 		    .collision_table()
 		    .get(i, j);
-		if collision_status.bounding_box_collision() &&
-		    !collision_status.colliding
-		{
-		    match collision_status.separating_plane {
-			SeparatingPlane::Face{face_indices} => {
-			    let polyhedron = simulation
-				.rigid_bodies[face_indices.face_rigid_body]
-				.polyhedron_world();
-			    Self::draw_face_edges(
-				polyhedron,
-				face_indices.face,
-				Color::rgb(255, 0, 0),
-				true,
-				&mut self.draw_3d,
-			    );
-			    let mut avg = Vector3d::default();
-			    let vertices = polyhedron.vertices();
-			    let separating_face =
-				&polyhedron.faces()[face_indices.face];
-			    let vertex_indices =
-				separating_face.vertex_indices();
-			    for vertex_index in vertex_indices {
-				avg.add_assign(&vertices[*vertex_index]);
+		if collision_status.bounding_box_collision() {
+		    if !collision_status.colliding {
+			match collision_status.separating_plane {
+			    SeparatingPlane::Face{face_indices} => {
+				let polyhedron = simulation
+				    .rigid_bodies[face_indices.face_rigid_body]
+				    .polyhedron_world();
+				Self::draw_face_edges(
+				    polyhedron,
+				    face_indices.face,
+				    Color::rgb(255, 0, 0),
+				    true,
+				    &mut self.draw_3d,
+				);
+				let mut avg = Vector3d::default();
+				let vertices = polyhedron.vertices();
+				let separating_face =
+				    &polyhedron.faces()[face_indices.face];
+				let vertex_indices =
+				    separating_face.vertex_indices();
+				for vertex_index in vertex_indices {
+				    avg.add_assign(&vertices[*vertex_index]);
+				}
+				avg.scale_assign(1./vertex_indices.len() as f64);
+				self.draw_line(
+				    &avg, &avg.add(separating_face.direction()),
+				    Color::rgb(255, 255, 255),
+				    true,
+				);
 			    }
-			    avg.scale_assign(1./vertex_indices.len() as f64);
-			    self.draw_line(
-				&avg, &avg.add(separating_face.direction()),
-				Color::rgb(255, 255, 255),
-				true,
-			    );
-			}
-			SeparatingPlane::Edge{edge_indices} => {
-			    let plane_polyhedron = simulation
-				.rigid_bodies[edge_indices.plane_rigid_body]
-				.polyhedron_world();
-			    let plane_vertices = plane_polyhedron.vertices();
-			    let plane_edge =
-				plane_polyhedron.edges()[edge_indices.plane_edge];
-			    
-			    let other_polyhedron = simulation
-				.rigid_bodies[edge_indices.other_rigid_body]
-				.polyhedron_world();
-			    let other_vertices = other_polyhedron.vertices();
-			    let other_edge =
-				other_polyhedron.edges()[edge_indices.other_edge];
+			    SeparatingPlane::Edge{edge_indices} => {
+				let plane_polyhedron = simulation
+				    .rigid_bodies[edge_indices.plane_rigid_body]
+				    .polyhedron_world();
+				let plane_vertices = plane_polyhedron.vertices();
+				let plane_edge =
+				    plane_polyhedron.edges()[edge_indices.plane_edge];
+				
+				let other_polyhedron = simulation
+				    .rigid_bodies[edge_indices.other_rigid_body]
+				    .polyhedron_world();
+				let other_vertices = other_polyhedron.vertices();
+				let other_edge =
+				    other_polyhedron.edges()[edge_indices.other_edge];
 
-			    self.draw_edge_plane(
-				&plane_vertices[plane_edge.start_index()],
-				&plane_vertices[plane_edge.end_index()],
-				&edge_indices
-				    .plane_direction(&simulation.rigid_bodies)
-				    .unwrap(),
-				&other_vertices[other_edge.start_index()],
-				&other_vertices[other_edge.end_index()],
-			    );
-			    
-			    self.draw_line(
-				&other_vertices[other_edge.start_index()],
-				&other_vertices[other_edge.end_index()],
-				Color::rgb(255, 0, 0),
-				true,
-			    );
+				self.draw_edge_plane(
+				    &plane_vertices[plane_edge.start_index()],
+				    &plane_vertices[plane_edge.end_index()],
+				    &edge_indices
+					.plane_direction(&simulation.rigid_bodies)
+					.unwrap(),
+				    &other_vertices[other_edge.start_index()],
+				    &other_vertices[other_edge.end_index()],
+				);
+				
+				self.draw_line(
+				    &other_vertices[other_edge.start_index()],
+				    &other_vertices[other_edge.end_index()],
+				    Color::rgb(255, 0, 0),
+				    true,
+				);
+			    }
+			    SeparatingPlane::None => unreachable!(),
 			}
-			SeparatingPlane::None => unreachable!(),
+		    } else {
+			for contact in &collision_status.contacts {
+			    match contact {
+				Contact::VertexFace{vertex_face_indices} => {
+				    self.draw_position(
+					&simulation.rigid_bodies[vertex_face_indices.vertex_rigid_body]
+					    .polyhedron_world()
+					    .vertices()[vertex_face_indices.vertex],
+					Color::rgb(255, 255, 0),
+				    );
+				}
+				Contact::EdgeEdge{edge_edge_indices} => {
+				    self.draw_position(
+					&edge_edge_indices.contact_position,
+					Color::rgb(0, 255, 255),
+				    );
+				}
+			    }
+			}
 		    }
 		}
 	    }

@@ -30,7 +30,7 @@ pub fn simple<P: AsRef<Path>>(path: P) -> Result<Mesh> {
     let file = File::open(path)?;
     let reader = BufReader::new(file);
     let mut vertices = Vec::new();
-    let mut ret = Mesh::new();
+    let mut mesh_triangles = Vec::new();
     
     for line in reader.lines() {
         let line = line?;
@@ -53,15 +53,11 @@ pub fn simple<P: AsRef<Path>>(path: P) -> Result<Mesh> {
 		if values.len() != 3 {
 		    return Err(get_error("Unrecognized file format."));
 		}
-		ret.add(&
-			MeshTriangle::norm_from_vertices
-			(
-		    &vertices[values[0]],
-		    &vertices[values[1]],
-		    &vertices[values[2]],
+		mesh_triangles.push(MeshTriangle::norm_from_vertices(
+		    &vertices, &[values[0], values[1], values[2]],
 		));
 	    }
 	}
     }
-    Ok(ret)
+    Ok(Mesh::new(vertices, mesh_triangles))
 }

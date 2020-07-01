@@ -1,7 +1,7 @@
 mod input;
 
 use rigid_body_core::{
-    config::test,
+    config,
     input::camera_mover::CameraMode,
     render::ScreenBufferTrait,
     RigidBodySimulationCore,
@@ -82,6 +82,6 @@ pub fn init(width: u32, height: u32) -> RigidBodySimulationWAsm {
     let mut ret = RigidBodySimulationWAsm::new(width, height);
     ret.camera_mover_mut().mode = CameraMode::Rel;
     ret.camera_mover_mut().wheel_scale = 0.2;
-    test::bounding_box(&mut ret);
+    config::default(&mut ret);
     ret
 }

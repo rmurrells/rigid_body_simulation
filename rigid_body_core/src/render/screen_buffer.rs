@@ -9,7 +9,7 @@ use std::{
 
 pub const PIXEL_FORMAT: usize = 4;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Color {
     pub r: u8,
     pub g: u8,
@@ -57,6 +57,12 @@ impl ScreenBuffer {
 	color: Color,
 	in_front: bool,
     ) {
+	if start.is_nan() || end.is_nan() {
+	    println!(
+		"screen_buffer draw_line - supplied NaN: {} {}", start, end,
+	    );
+	    return;
+	}
 	let mut draw_line_impl = |
 	    x0: i32, y0: i32, z0: f64,
 	    x1: i32, y1: i32, z1: f64,

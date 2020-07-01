@@ -46,8 +46,10 @@ pub fn immovable(rigid_body_simulation: &mut impl RigidBodySimulationTrait) {
     );
 }
 
-pub fn icosphere(rigid_body_simulation: &mut impl RigidBodySimulationTrait, sd: u8) {
-    let mesh = polyhedron_meshes::icosphere(5., sd);
+pub fn regular_icosahedron(
+    rigid_body_simulation: &mut impl RigidBodySimulationTrait,
+) -> Result<(), String> {
+    let mesh = polyhedron_meshes::regular_icosahedron(5.);
     let mass_inv = 1.;
     let mi_inv = moment_of_inertia::solid_sphere(
 	5., 1./mass_inv,
@@ -62,7 +64,7 @@ pub fn icosphere(rigid_body_simulation: &mut impl RigidBodySimulationTrait, sd: 
 	    &Matrix3x3::identity(),
 	    &Vector3d::new(0., 0., 0.),
 	    &Vector3d::new(1., 1., 1.),	
-	),
+	)?,
  	RenderOption::Mesh {
 	    mesh: mesh.clone(),
 	    color: Color::rgb(0, 255, 0),
@@ -77,12 +79,13 @@ pub fn icosphere(rigid_body_simulation: &mut impl RigidBodySimulationTrait, sd: 
 	    &Matrix3x3::identity(),
 	    &Vector3d::new(0., 0., 0.),
 	    &Vector3d::new(0., 1., 0.),	
-	),
+	)?,
  	RenderOption::Mesh {
 	    mesh: mesh,
 	    color: Color::rgb(0, 255, 0),
 	},
     );
+    Ok(())
 }
 
 pub fn coincident(rigid_body_simulation: &mut impl RigidBodySimulationTrait) {
@@ -118,7 +121,9 @@ pub fn coincident(rigid_body_simulation: &mut impl RigidBodySimulationTrait) {
     );
 }
 
-pub fn bounding_box(rigid_body_simulation: &mut impl RigidBodySimulationTrait) {
+pub fn bounding_box_external(
+    rigid_body_simulation: &mut impl RigidBodySimulationTrait,
+) -> Result<(), String> {
     rigid_body_simulation.camera_mut().position = Vector3d::new(0., 0., -30.);
     let bbhd = 15.;
     rigid_body_simulation.set_bounding_box(Some((
@@ -136,14 +141,14 @@ pub fn bounding_box(rigid_body_simulation: &mut impl RigidBodySimulationTrait) {
     let mut dim = Vector3d::new(3., 3., 3.);
     let color = Color::rgb(0, 255, 0);
     for i in 0..3 {
-	let x = i as f64*10.-10.;
+	let x = (i as f64*10.-10.)*10.;
 	for j in 0..3 {
 	    if j == 1 {continue;}
-	    let y = j as f64*10.-10.;
+	    let y = (j as f64*10.-10.)*10.;
 	    for k in 0..3 {
-		let z = k as f64*10.-10.;
+		let z = (k as f64*10.-10.)*10.;
 		if j != 2 {
-		    let mesh = polyhedron_meshes::icosphere(radius, 0);
+		    let mesh = polyhedron_meshes::regular_icosahedron(radius);
 		    rigid_body_simulation.add_rigid_body(
 			RigidBody::from_mesh(
 			    &mesh,
@@ -153,7 +158,7 @@ pub fn bounding_box(rigid_body_simulation: &mut impl RigidBodySimulationTrait) {
 			    &Matrix3x3::identity(),
 			    &Vector3d::new(0., -4., 0.),
 			    &Vector3d::new(0., 0., 0.),
-			),
+			)?,
 			RenderOption::Mesh{mesh, color},
 		    );
 		} else {
@@ -219,4 +224,6 @@ pub fn bounding_box(rigid_body_simulation: &mut impl RigidBodySimulationTrait) {
 	    color: Color::rgb(0, 255, 0),
 	},
     );
+    
+    Ok(())
 }

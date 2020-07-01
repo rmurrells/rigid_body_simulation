@@ -8,75 +8,39 @@ use crate::math::vector::Vector3d;
 pub fn cuboid(dim: &Vector3d) -> Mesh {
     let min = dim.scale(-0.5);
     let max = dim.scale(0.5);
-    Mesh::from(vec![	
-	MeshTriangle::norm_from_vertices(
-	    &min,
-	    &Vector3d::new(min[0], max[1], min[2]),
-	    &Vector3d::new(max[0], max[1], min[2]),
-	),
-	MeshTriangle::norm_from_vertices(
-	    &min,
-	    &Vector3d::new(max[0], max[1], min[2]),
-	    &Vector3d::new(max[0], min[1], min[2]),
-	),
+    let vertices = vec![
+	min,
+	Vector3d::new(min[0], min[1], max[2]),
+	Vector3d::new(min[0], max[1], min[2]),
+	Vector3d::new(min[0], max[1], max[2]),
+	max,
+	Vector3d::new(max[0], max[1], min[2]),
+	Vector3d::new(max[0], min[1], max[2]),
+	Vector3d::new(max[0], min[1], min[2]),
+    ];
+    let mesh_triangles = vec![
+	MeshTriangle::norm_from_vertices(&vertices, &[0, 2, 5]),
+	MeshTriangle::norm_from_vertices(&vertices, &[0, 5, 7]),
 	
-	MeshTriangle::norm_from_vertices(
-	    &Vector3d::new(max[0], min[1], min[2]),
-	    &Vector3d::new(max[0], max[1], min[2]),
-	    &max,
-	),
-	MeshTriangle::norm_from_vertices(
-	    &Vector3d::new(max[0], min[1], min[2]),
-	    &max,
-	    &Vector3d::new(max[0], min[1], max[2]),
-	),
-	
-	MeshTriangle::norm_from_vertices(
-	    &Vector3d::new(max[0], min[1], max[2]),
-	    &max,
-	    &Vector3d::new(min[0], max[1], max[2]),
-	),
-	MeshTriangle::norm_from_vertices(
-	    &Vector3d::new(max[0], min[1], max[2]),
-	    &Vector3d::new(min[0], max[1], max[2]),
-	    &Vector3d::new(min[0], min[1], max[2]),
-	),
-	
-	MeshTriangle::norm_from_vertices(
-	    &Vector3d::new(min[0], min[1], max[2]),
-	    &Vector3d::new(min[0], max[1], max[2]),
-	    &Vector3d::new(min[0], max[1], min[2]),
-	),
-	MeshTriangle::norm_from_vertices(
-	    &Vector3d::new(min[0], min[1], max[2]),
-	    &Vector3d::new(min[0], max[1], min[2]),
-	    &min,
-	),
-	
-	MeshTriangle::norm_from_vertices(
-	    &Vector3d::new(min[0], max[1], min[2]),
-	    &Vector3d::new(min[0], max[1], max[2]),
-	    &max,
-	),
-	MeshTriangle::norm_from_vertices(
-	    &Vector3d::new(min[0], max[1], min[2]),
-	    &max,
-	    &Vector3d::new(max[0], max[1], min[2]),
-	),
-	
-	MeshTriangle::norm_from_vertices(
-	    &Vector3d::new(max[0], min[1], max[2]),
-	    &Vector3d::new(min[0], min[1], max[2]),
-	    &min,
-	),
-	MeshTriangle::norm_from_vertices(
-	    &Vector3d::new(max[0], min[1], max[2]),
-	    &min,
-	    &Vector3d::new(max[0], min[1], min[2]),
-	),
-    ])
+	MeshTriangle::norm_from_vertices(&vertices, &[7, 5, 4]),
+	MeshTriangle::norm_from_vertices(&vertices, &[7, 4, 6]),
+
+	MeshTriangle::norm_from_vertices(&vertices, &[6, 4, 3]),
+	MeshTriangle::norm_from_vertices(&vertices, &[6, 3, 1]),
+
+	MeshTriangle::norm_from_vertices(&vertices, &[1, 3, 2]),
+	MeshTriangle::norm_from_vertices(&vertices, &[1, 2, 0]),
+
+	MeshTriangle::norm_from_vertices(&vertices, &[2, 3, 4]),
+	MeshTriangle::norm_from_vertices(&vertices, &[2, 4, 5]),
+
+	MeshTriangle::norm_from_vertices(&vertices, &[6, 1, 0]),
+	MeshTriangle::norm_from_vertices(&vertices, &[6, 0, 7]),
+    ];
+    Mesh::new(vertices, mesh_triangles)
 }
 
+/*
 pub fn icosphere(radius: f64, mut n: u8) -> Mesh {
     let mut ret = regular_icosahedron(radius);
     while n > 0 {
@@ -113,13 +77,14 @@ pub fn icosphere(radius: f64, mut n: u8) -> Mesh {
     }
     ret
 }
+*/
 
 pub fn regular_icosahedron(size: f64) -> Mesh {
     let golden = (1.+5f64.sqrt())*0.5;
     let w = (size*size/(1.+1./(golden*golden))).sqrt();
     let h = w/golden;
     
-    let vertices = [
+    let vertices = vec![
 	Vector3d::new(-h, 0., w),
 	Vector3d::new(h, 0., w),
 	Vector3d::new(-h, 0., -w),
@@ -136,66 +101,27 @@ pub fn regular_icosahedron(size: f64) -> Mesh {
 	Vector3d::new(-w, -h, 0.),
     ];
 
-    Mesh::from(vec![
-	MeshTriangle::norm_from_vertices(
-	    &vertices[4], &vertices[0], &vertices[1],
-	),
-	MeshTriangle::norm_from_vertices(
-	    &vertices[9], &vertices[0], &vertices[4],
-	),
-	MeshTriangle::norm_from_vertices(
-	    &vertices[5], &vertices[9], &vertices[4],
-	),
-	MeshTriangle::norm_from_vertices(
-	    &vertices[5], &vertices[4], &vertices[8],
-	),
-	MeshTriangle::norm_from_vertices(
-	    &vertices[8], &vertices[4], &vertices[1],
-	),
-	MeshTriangle::norm_from_vertices(
-	    &vertices[10], &vertices[8], &vertices[1],
-	),
-	MeshTriangle::norm_from_vertices(
-	    &vertices[3], &vertices[8], &vertices[10],
-	),
-	MeshTriangle::norm_from_vertices(
-	    &vertices[3], &vertices[5], &vertices[8],
-	),
-	MeshTriangle::norm_from_vertices(
-	    &vertices[2], &vertices[5], &vertices[3],
-	),
-	MeshTriangle::norm_from_vertices(
-	    &vertices[7], &vertices[2], &vertices[3],
-	),
-	MeshTriangle::norm_from_vertices(
-	    &vertices[10], &vertices[7], &vertices[3],
-	),
-	MeshTriangle::norm_from_vertices(
-	    &vertices[6], &vertices[7], &vertices[10],
-	),
-	MeshTriangle::norm_from_vertices(
-	    &vertices[11], &vertices[7], &vertices[6],
-	),
-	MeshTriangle::norm_from_vertices(
-	    &vertices[0], &vertices[11], &vertices[6],
-	),
-	MeshTriangle::norm_from_vertices(
-	    &vertices[1], &vertices[0], &vertices[6],
-	),
-	MeshTriangle::norm_from_vertices(
-	    &vertices[1], &vertices[6], &vertices[10],
-	),
-	MeshTriangle::norm_from_vertices(
-	    &vertices[0], &vertices[9], &vertices[11],
-	),
-	MeshTriangle::norm_from_vertices(
-	    &vertices[11], &vertices[9], &vertices[2],
-	),
-	MeshTriangle::norm_from_vertices(
-	    &vertices[2], &vertices[9], &vertices[5],
-	),
-	MeshTriangle::norm_from_vertices(
-	    &vertices[2], &vertices[7], &vertices[11],
-	),
-    ])
+    let mesh_triangles = vec![
+	MeshTriangle::norm_from_vertices(&vertices, &[4, 0, 1]),
+	MeshTriangle::norm_from_vertices(&vertices, &[9, 0, 4]),
+	MeshTriangle::norm_from_vertices(&vertices, &[5, 9, 4]),
+	MeshTriangle::norm_from_vertices(&vertices, &[5, 4, 8]),
+	MeshTriangle::norm_from_vertices(&vertices, &[8, 4, 1]),
+	MeshTriangle::norm_from_vertices(&vertices, &[10, 8, 1]),
+	MeshTriangle::norm_from_vertices(&vertices, &[3, 8, 10]),
+	MeshTriangle::norm_from_vertices(&vertices, &[3, 5, 8]),
+	MeshTriangle::norm_from_vertices(&vertices, &[2, 5, 3]),
+	MeshTriangle::norm_from_vertices(&vertices, &[7, 2, 3]),
+	MeshTriangle::norm_from_vertices(&vertices, &[10, 7, 3]),
+	MeshTriangle::norm_from_vertices(&vertices, &[6, 7, 10]),
+	MeshTriangle::norm_from_vertices(&vertices, &[11, 7, 6]),
+	MeshTriangle::norm_from_vertices(&vertices, &[0, 11, 6]),
+	MeshTriangle::norm_from_vertices(&vertices, &[1, 0, 6]),
+	MeshTriangle::norm_from_vertices(&vertices, &[1, 6, 10]),
+	MeshTriangle::norm_from_vertices(&vertices, &[0, 9, 11]),
+	MeshTriangle::norm_from_vertices(&vertices, &[11, 9, 2]),
+	MeshTriangle::norm_from_vertices(&vertices, &[2, 9, 5]),
+	MeshTriangle::norm_from_vertices(&vertices, &[2, 7, 11]),
+    ];
+    Mesh::new(vertices, mesh_triangles)
 }

@@ -227,7 +227,7 @@ impl CollisionManager {
 	);
 	normal_rigid_body.update_velocity();
 	normal_rigid_body.update_angular_velocity();
-	
+
 	true
     }
 
@@ -319,8 +319,8 @@ impl CollisionManager {
 	rigid_bodies: &[RigidBody],
 	mode: &mut Mode,
     ) {
- 	let polyhedron = rigid_bodies[plane_rigid_body_index]
-	    .polyhedron_world();
+	let rigid_body = &rigid_bodies[plane_rigid_body_index];
+ 	let polyhedron = rigid_body.polyhedron_world();
 	let vertices = polyhedron.vertices();
 	let edges = polyhedron.edges();
 
@@ -360,7 +360,16 @@ impl CollisionManager {
 			if ip <= COLLISION_EPSILON {
 			    let mut plane_direction =
 				edge.direction().cross(other_edge.direction());
-			    if plane_direction.is_zero() {continue;}
+			    if plane_direction.is_zero() {
+				plane_direction = *edge.direction();
+			    }
+			    if geometry::pos_raw_plane_signed_dist(
+				&rigid_body.position,
+				edge_start,
+				&plane_direction,
+			    ) > 0. {
+				plane_direction.scale_assign(-1.); 
+			    }
 			    plane_direction.normalize();
 			    contacts.push(Contact::EdgeEdge {
 				edge_edge_indices: EdgeEdgeIndices {
@@ -645,7 +654,7 @@ impl CollisionManager {
 	    },
 	);
 	if collision_status.contacts.is_empty() {
-	    panic!("closest_distance - Contacts");
+	    println!("closest_distance - Contacts");
 	}
 	Self::contact_forces_simple(
 	    &collision_status.contacts, rigid_bodies,

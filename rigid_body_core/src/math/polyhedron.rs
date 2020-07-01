@@ -12,22 +12,22 @@ pub struct Polyhedron {
 
 impl Polyhedron {
     pub fn new(
+	face_vertex_indices: Vec<Vec<usize>>,
 	edges: Vec<Edge>,
 	vertices: Vec<Vector3d>,
-	face_vertex_indices: Vec<Vec<usize>>,
-    ) -> Self {
+    ) -> Result<Self, String> {
 	let mut inside = Vector3d::default();
 	for vertex in &vertices {inside.add_assign(vertex);}
 	inside.scale_assign(1./vertices.len() as f64);
 	let mut faces = Vec::with_capacity(face_vertex_indices.len());
 	for indices in face_vertex_indices {
-	    faces.push(Face::new(indices,  &vertices, &inside, &edges));
+	    faces.push(Face::new(indices,  &vertices, &inside, &edges)?);
 	}
-	Self {
+	Ok(Self {
 	    faces,
 	    edges,
 	    vertices,
-	}
+	})
     }
 
     pub fn cuboid(
@@ -43,6 +43,14 @@ impl Polyhedron {
 	    Vector3d::new(hx, hy, hz), Vector3d::new(-hx, hy, hz),
 	];
 	Self::new(
+	    vec![
+		vec![0, 3, 4, 7],	
+                vec![1, 2, 5, 6],
+		vec![0, 1, 4, 5],
+                vec![2, 3, 6, 7],
+		vec![0, 1, 2, 3],		
+		vec![4, 5, 6, 7],
+	    ],
 	    vec![
 		Edge::new(0, 1, &vertices),
 		Edge::new(1, 2, &vertices),
@@ -60,15 +68,7 @@ impl Polyhedron {
 		Edge::new(7, 4, &vertices),
 	    ],
 	    vertices,
-	    vec![
-		vec![0, 3, 4, 7],	
-                vec![1, 2, 5, 6],
-		vec![0, 1, 4, 5],
-                vec![2, 3, 6, 7],
-		vec![0, 1, 2, 3],		
-		vec![4, 5, 6, 7],
-	    ],
-	)
+	).expect("Polyhedron - cuboid")
     }
 
     pub fn update(&mut self) {
@@ -101,7 +101,7 @@ impl Polyhedron {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Edge {
     start_index: usize,
     end_index: usize,
@@ -155,7 +155,7 @@ impl Face {
 	vertices: &[Vector3d],
 	inside: &Vector3d,
 	edges: &[Edge],
-    ) -> Self {
+    ) -> Result<Self, String> {
 	let face_vertex = &vertices[vertex_indices[0]];
 	let (connected_edge_indices, edge_indices) = Self::get_edges(
 	    &vertex_indices, edges,
@@ -173,7 +173,11 @@ impl Face {
 	) > 0. {
 	    ret.flip_direction = true;
 	}
-	ret
+	if ret.direction.is_nan() {
+	    Err("Face with undefined direction.".into())
+	} else {
+	    Ok(ret)
+	}
     }
 
     pub fn direction(&self) -> &Vector3d {
@@ -183,10 +187,10 @@ impl Face {
     pub fn edge_indices(&self) -> &[usize] {
 	&self.edge_indices
     }    
-    
+
     pub fn connected_edge_indices(&self) -> &[usize] {
 	&self.connected_edge_indices
-    }    
+    }
 
     pub fn enclosing_planes(
 	&self, vertices: &[Vector3d], edges: &[Edge],
