@@ -45,7 +45,7 @@ pub fn default(
     let icosahedron_mesh = polyhedron_meshes::regular_icosahedron(radius);
     let tetrahedron_mesh = polyhedron_meshes::regular_tetrahedron(radius);
     let mut color_increment = ColorIncrement::new(n*n*n);
-    
+
     let mut x = bb_min[0];
     for i in 0..n {
 	get_pos(0, i, &mut x);
@@ -68,7 +68,7 @@ pub fn default(
 			RenderOption::Mesh {
 			    mesh: polyhedron_meshes::cuboid(&dim),
 			    color: color_increment.get(),
-			},
+			}
 		    );
 		} else if j%3 == 1 {
 		    rigid_body_simulation.add_rigid_body(

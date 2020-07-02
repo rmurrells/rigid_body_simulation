@@ -43,6 +43,7 @@ type RenderMap = IntMap<UID, RenderOption>;
 
 pub enum RenderOption {
     Invisible,
+    Edges{edge_indices: Vec<usize>, color: Color},
     FaceEdges{face_indices: Vec<usize>, color: Color},
     Mesh{mesh: Mesh, color: Color},
     PolyhedronEdges{color: Color},
@@ -62,7 +63,7 @@ impl RendererCore {
 	}
     }
 
-    pub fn add_uid(&mut self, uid: UID, render_option: RenderOption) {
+    pub fn set_uid(&mut self, uid: UID, render_option: RenderOption) {
 	self.render_map.insert(uid, render_option);
     }
     
@@ -364,6 +365,20 @@ impl RendererCore {
 	match render_map.get(&rigid_body.uid()) {
 	    Some(render_option) => match render_option {
 		RenderOption::Invisible => (),
+		RenderOption::Edges{edge_indices, color} => {
+		    let polyhedron = rigid_body.polyhedron_world();
+		    let vertices = polyhedron.vertices();
+		    let edges = polyhedron.edges();
+		    for edge_index in edge_indices {
+			let edge = &edges[*edge_index];
+			draw_3d.draw_line(
+			    &vertices[edge.start_index()],
+			    &vertices[edge.end_index()],
+			    *color,
+			    true,
+			);
+		    }
+		}
 		RenderOption::FaceEdges{face_indices, color} => {
 		    for face_index in face_indices {
 			Self::draw_face_edges(

@@ -124,7 +124,7 @@ pub trait RigidBodySimulationTrait: RigidBodySimulationCoreAccess {
 	let core = self.rigid_body_simulation_core_access();
         let uid = rigid_body.uid();
         core.simulation.add_rigid_body(rigid_body);
-        core.renderer.add_uid(uid, render_opt);
+        core.renderer.set_uid(uid, render_opt);
     }
 
     fn camera_mover_mut(&mut self) -> &mut CameraMover {
@@ -144,11 +144,11 @@ pub trait RigidBodySimulationTrait: RigidBodySimulationCoreAccess {
 	    Some((min, max, render_opt)) => {
 		simulation.set_bounding_box(&Some((min, max)));
 		let bounding_box = &simulation.bounding_box();
-		core.renderer.add_uid(bounding_box.uid, render_opt);
+		core.renderer.set_uid(bounding_box.uid, render_opt);
 		for uid in &simulation.bounding_box()
 		    .inner_opt.as_ref().unwrap().rigid_body_uids
 		{
-		    core.renderer.add_uid(*uid, RenderOption::Invisible);
+		    core.renderer.set_uid(*uid, RenderOption::Invisible);
 		}
 	    }
 	    None => simulation.set_bounding_box(&None),

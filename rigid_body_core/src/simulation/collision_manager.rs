@@ -340,6 +340,7 @@ impl CollisionManager {
 		plane_coincident_edges.push(edge_index);	
 	    }
 	}
+	
 	let other_rigid_body = &rigid_bodies[other_rigid_body_index];
 	let other_polyhedron = other_rigid_body.polyhedron_world();
 	let other_vertices = other_polyhedron.vertices();
@@ -656,7 +657,9 @@ impl CollisionManager {
 	    },
 	);
 	if self.debug && collision_status.contacts.is_empty() {
-	    println!("closest_distance - Contacts");
+	    println!(
+		"closest_distance - Contacts",
+	    );
 	}
 	Self::contact_forces_simple(
 	    &collision_status.contacts, rigid_bodies,
@@ -681,9 +684,9 @@ impl CollisionManager {
 	    if bisect.abs() < EPSILON {
 		if self.debug {
 		    println!(
-			"de_penetrate_dir failiure - bisect ({} {})",
-			rigid_body_1_index,
-			rigid_body_2_index,
+			"de_penetrate_dir failiure - bisect, uids: ({} {})",
+			rigid_bodies[rigid_body_1_index].uid(),
+			rigid_bodies[rigid_body_2_index].uid(),
 		    );
 		}
 		return;
@@ -708,7 +711,11 @@ impl CollisionManager {
 		);
 		if dist == MAX {
 		    if self.debug {
-			println!("de_penetrate_dir failiure - plane");
+			println!(
+			    "de_penetrate_dir failiure - plane, uids: ({} {})",
+			    rigid_bodies[rigid_body_1_index].uid(),
+			    rigid_bodies[rigid_body_2_index].uid(),
+			);
 		    }
 		    return;
 		}
@@ -716,7 +723,11 @@ impl CollisionManager {
 	    } else {
 		if dist == MAX {
 		    if self.debug {
-			println!("de_penetrate_dir failiure - no plane");
+			println!(
+			    "de_penetrate_dir failiure - no plane, uids: ({} {})",
+			    rigid_bodies[rigid_body_1_index].uid(),
+			    rigid_bodies[rigid_body_2_index].uid(),
+			);
 		    }
 		    return;
 		}
