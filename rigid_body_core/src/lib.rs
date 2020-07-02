@@ -111,7 +111,7 @@ impl RigidBodySimulationCore {
     }
 }
 
-trait RigidBodySimulationCoreAccess {
+pub trait RigidBodySimulationCoreAccess {
     fn rigid_body_simulation_core_access(
 	&mut self,
     ) -> &mut RigidBodySimulationCore;
