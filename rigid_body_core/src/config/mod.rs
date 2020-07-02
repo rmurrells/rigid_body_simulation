@@ -32,20 +32,25 @@ pub fn default(
         
     let dim = Vector3d::new(3., 3., 3.);
     let radius = dim[0]/2.;
-    let mass_inv = 1.;
+    let icosahedron_mesh = polyhedron_meshes::regular_icosahedron(radius);
+    let tetrahedron_mesh = polyhedron_meshes::regular_tetrahedron(radius);
+
+    let mass = 1.;
+    let mass_inv = 1./mass;
     let sphere_mi_inv = moment_of_inertia::solid_sphere(
-	radius, 1./mass_inv,
-    ).inverse().expect("mi_inv");
+	radius, mass,
+    ).inverse().expect("sphere_mi_inv");
+    let tetrahedron_mi_inv = moment_of_inertia::regular_tetrahedron(
+	tetrahedron_mesh.vertices[0].dist(&tetrahedron_mesh.vertices[1]),
+	mass,
+    ).inverse().expect("tetrahedron_mi_inv");
 
     let get_pos = |axis: usize, index: usize, current: &mut f64| {
 	let gap = (bb_dim[axis]-dim[axis]*n as f64)/(n+1) as f64;
 	*current += gap+dim[axis]*if index == 0 {0.5} else{1.}
     };
 
-    let icosahedron_mesh = polyhedron_meshes::regular_icosahedron(radius);
-    let tetrahedron_mesh = polyhedron_meshes::regular_tetrahedron(radius);
     let mut color_increment = ColorIncrement::new(n*n*n);
-
     let mut x = bb_min[0];
     for i in 0..n {
 	get_pos(0, i, &mut x);
@@ -91,7 +96,7 @@ pub fn default(
 			RigidBody::from_mesh(
 			    &tetrahedron_mesh,
 			    mass_inv,
-			    &sphere_mi_inv,
+			    &tetrahedron_mi_inv,
 			    &Vector3d::new(x, y, z),
 			    &Matrix3x3::identity(),
 			    &Vector3d::new(0., -4., 0.),

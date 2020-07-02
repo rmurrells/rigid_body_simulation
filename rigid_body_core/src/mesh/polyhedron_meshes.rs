@@ -91,7 +91,6 @@ pub fn regular_icosahedron(size: f64) -> Mesh {
     let golden = (1.+5f64.sqrt())*0.5;
     let w = (size*size/(1.+1./(golden*golden))).sqrt();
     let h = w/golden;
-    
     let vertices = vec![
 	Vector3d::new(-h, 0., w),
 	Vector3d::new(h, 0., w),
@@ -108,7 +107,6 @@ pub fn regular_icosahedron(size: f64) -> Mesh {
 	Vector3d::new(w, -h, 0.),
 	Vector3d::new(-w, -h, 0.),
     ];
-
     let mesh_triangles = vec![
 	MeshTriangle::norm_from_vertices(&vertices, &[4, 0, 1]),
 	MeshTriangle::norm_from_vertices(&vertices, &[9, 0, 4]),

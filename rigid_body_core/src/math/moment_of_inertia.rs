@@ -17,3 +17,7 @@ pub fn aligned_cuboid(dimensions: &Vector3d, mass: f64) -> Matrix3x3 {
 pub fn solid_sphere(radius: f64, mass: f64) -> Matrix3x3 {
     Matrix3x3::identity().scale(mass*radius*radius*2./5.)
 }
+
+pub fn regular_tetrahedron(side_length: f64, mass: f64) -> Matrix3x3 {
+    Matrix3x3::identity().scale(mass*side_length*side_length/20.)
+}
