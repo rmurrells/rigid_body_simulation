@@ -53,6 +53,10 @@ impl Simulation {
 	);
     }
 
+    pub fn set_debug(&mut self, set: bool) {
+	self.collision_manager.debug = set;
+    }
+    
     pub fn tick(&mut self, delta_t: f64) {
 	self.force_manager.resultant(&mut self.rigid_bodies);
 	ode::euler(delta_t, &mut self.rigid_bodies);

@@ -155,8 +155,12 @@ pub trait RigidBodySimulationTrait: RigidBodySimulationCoreAccess {
 	}
     }	
     
-    fn set_debug(&mut self, set: bool) {
+    fn set_render_debug(&mut self, set: bool) {
 	self.rigid_body_simulation_core_access().debug = set;
+    }
+
+    fn set_simulation_debug(&mut self, set: bool) {
+	self.rigid_body_simulation_core_access().simulation.set_debug(set);
     }
     
     fn set_fps(&mut self, fps: u64) {
