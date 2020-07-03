@@ -12,5 +12,5 @@ rigid_body_core = {path = "../rigid_body_core"}
 criterion = "0.3"
 
 [[bench]]
-name = "my_benchmark"
+name = "default_benchmark"
 harness = false
