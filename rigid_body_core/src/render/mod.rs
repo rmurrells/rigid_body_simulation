@@ -68,7 +68,7 @@ impl RendererCore {
     }
     
     pub fn render_simulation(&mut self, simulation: &Simulation) {
-	for rigid_body in &simulation.rigid_bodies {
+	for rigid_body in simulation.rigid_bodies().iter() {
 	    self.draw_rigid_body(rigid_body, &None);	    
 	}
 	let bounding_box = simulation.bounding_box();
@@ -80,7 +80,8 @@ impl RendererCore {
     pub fn render_simulation_debug(
 	&mut self, simulation: &Simulation,
     ) {
-	for (i, rigid_body) in simulation.rigid_bodies.iter().enumerate() {
+	let rigid_bodies = simulation.rigid_bodies();
+	for (i, rigid_body) in rigid_bodies.iter().enumerate() {
 	    self.draw_rigid_body(
 		rigid_body,
 		&Some(if simulation.collision_manager.is_colliding(i) {
@@ -102,10 +103,10 @@ impl RendererCore {
 		},
 	    );
 	}
-	for i in 1..simulation.rigid_bodies.len() {
+	for i in 1..rigid_bodies.len() {
 	    for j in 0..i {
-		if simulation.rigid_bodies[i].is_immovable() &&
-		    simulation.rigid_bodies[j].is_immovable()
+		if rigid_bodies[i].is_immovable() &&
+		    rigid_bodies[j].is_immovable()
 		{
 		    continue;
 		}
@@ -117,8 +118,8 @@ impl RendererCore {
 		    if !collision_status.colliding {
 			match collision_status.separating_plane {
 			    SeparatingPlane::Face{face_indices} => {
-				let polyhedron = simulation
-				    .rigid_bodies[face_indices.face_rigid_body]
+				let polyhedron =
+				    rigid_bodies[face_indices.face_rigid_body]
 				    .polyhedron_world();
 				Self::draw_face_edges(
 				    polyhedron,
@@ -144,15 +145,15 @@ impl RendererCore {
 				);
 			    }
 			    SeparatingPlane::Edge{edge_indices} => {
-				let plane_polyhedron = simulation
-				    .rigid_bodies[edge_indices.plane_rigid_body]
+				let plane_polyhedron =
+				    rigid_bodies[edge_indices.plane_rigid_body]
 				    .polyhedron_world();
 				let plane_vertices = plane_polyhedron.vertices();
 				let plane_edge =
 				    plane_polyhedron.edges()[edge_indices.plane_edge];
 				
-				let other_polyhedron = simulation
-				    .rigid_bodies[edge_indices.other_rigid_body]
+				let other_polyhedron =
+				    rigid_bodies[edge_indices.other_rigid_body]
 				    .polyhedron_world();
 				let other_vertices = other_polyhedron.vertices();
 				let other_edge =
@@ -162,7 +163,7 @@ impl RendererCore {
 				    &plane_vertices[plane_edge.start_index()],
 				    &plane_vertices[plane_edge.end_index()],
 				    &edge_indices
-					.plane_direction(&simulation.rigid_bodies)
+					.plane_direction(rigid_bodies)
 					.unwrap(),
 				    &other_vertices[other_edge.start_index()],
 				    &other_vertices[other_edge.end_index()],
@@ -182,7 +183,7 @@ impl RendererCore {
 			    match contact {
 				Contact::VertexFace{vertex_face_indices} => {
 				    self.draw_position(
-					&simulation.rigid_bodies[vertex_face_indices.vertex_rigid_body]
+					&rigid_bodies[vertex_face_indices.vertex_rigid_body]
 					    .polyhedron_world()
 					    .vertices()[vertex_face_indices.vertex],
 					Color::rgb(255, 255, 0),

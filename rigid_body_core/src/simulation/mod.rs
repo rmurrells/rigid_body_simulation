@@ -17,7 +17,7 @@ use rigid_body::RigidBody;
 #[derive(Default)]
 pub struct Simulation {
     pub collision_manager: CollisionManager,
-    pub rigid_bodies: Vec<RigidBody>,
+    rigid_bodies: Vec<RigidBody>,
     initial_rigid_bodies: Vec<RigidBody>,
     force_manager: ForceManager,
     bounding_box: BoundingBox,
@@ -32,13 +32,22 @@ impl Simulation {
     pub fn add_rigid_body(&mut self, rigid_body: RigidBody) {
 	self.initial_rigid_bodies.push(rigid_body.clone());
 	self.rigid_bodies.push(rigid_body);
+	self.generated = false;
     }
 
     pub fn reset(&mut self) {
 	self.rigid_bodies = self.initial_rigid_bodies.clone();
-	self.collision_manager.generate(&self.rigid_bodies);
+	self.generated = false;
     }
 
+    pub fn rigid_bodies(&self) -> &[RigidBody] {
+	&self.rigid_bodies
+    }
+    
+    pub fn rigid_bodies_mut(&mut self) -> &mut [RigidBody] {
+	&mut self.rigid_bodies
+    }
+    
     pub fn bounding_box(&self) -> &BoundingBox {
 	&self.bounding_box
     }
