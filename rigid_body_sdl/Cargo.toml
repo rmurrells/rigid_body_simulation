@@ -5,7 +5,7 @@ authors = ["bobby"]
 edition = "2018"
 
 [dependencies]
-sdl2 = "0.33"
+sdl2 = "0.34.2"
 rigid_body_core = {path = "../rigid_body_core"}
 
 [dev-dependencies]
