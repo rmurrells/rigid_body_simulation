@@ -21,6 +21,7 @@ pub struct Simulation {
     initial_rigid_bodies: Vec<RigidBody>,
     force_manager: ForceManager,
     bounding_box: BoundingBox,
+    generated: bool,
 }
 
 impl Simulation {
@@ -31,7 +32,6 @@ impl Simulation {
     pub fn add_rigid_body(&mut self, rigid_body: RigidBody) {
 	self.initial_rigid_bodies.push(rigid_body.clone());
 	self.rigid_bodies.push(rigid_body);
-	self.collision_manager.generate(&self.rigid_bodies);
     }
 
     pub fn reset(&mut self) {
@@ -58,6 +58,10 @@ impl Simulation {
     }
     
     pub fn tick(&mut self, delta_t: f64) {
+	if !self.generated {
+	    self.collision_manager.generate(&self.rigid_bodies);
+	    self.generated = true;
+	}
 	self.force_manager.resultant(&mut self.rigid_bodies);
 	ode::euler(delta_t, &mut self.rigid_bodies);
 	if let Some(bounding_box) = &self.bounding_box.inner_opt {
