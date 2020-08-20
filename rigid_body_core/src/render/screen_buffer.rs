@@ -125,12 +125,11 @@ impl ScreenBuffer {
 	    } else {
 		draw_line_impl(x0, y0, z0, x1, y1, z1, true)
 	    }
+	}
+	else if y0 > y1 {
+	    draw_line_impl(x1, y1, z1, x0, y0, z0, false)
 	} else {
-            if y0 > y1 {
-		draw_line_impl(x1, y1, z1, x0, y0, z0, false)
-	    } else {
-		draw_line_impl(x0, y0, z0, x1, y1, z1, false)
-	    }
+	    draw_line_impl(x0, y0, z0, x1, y1, z1, false)
 	}
     }    
 

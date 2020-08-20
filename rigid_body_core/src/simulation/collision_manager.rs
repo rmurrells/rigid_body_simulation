@@ -147,14 +147,10 @@ impl CollisionManager {
 	) {
 	    return true;
 	}
-	if Self::separating_plane_edge_search(
+	Self::separating_plane_edge_search(
 	    rigid_body_1_index, rigid_body_2_index, rigid_bodies,
 	    separating_plane,
-	) {
-	    true
-	} else {
-	    false
-	}
+	)
     }
 
     fn contact_force(
@@ -477,13 +473,9 @@ impl CollisionManager {
 	    rigid_bodies[rigid_body_1_index].polyhedron_world().edges();
 	let edges_2 =
 	    rigid_bodies[rigid_body_2_index].polyhedron_world().edges();
-	let len_1 = edges_1.len();
-	let len_2 = edges_2.len();
 	
-	for edge_1_index in 0..len_1 {
-	    let edge_1 = &edges_1[edge_1_index];
-	    for edge_2_index in 0..len_2 {
-		
+	for (edge_1_index, edge_1) in edges_1.iter().enumerate() {
+	    for (edge_2_index, edge_2) in edges_2.iter().enumerate() {
 		let mut edge_indices = EdgeIndices {
 		    plane_rigid_body: rigid_body_1_index,
 		    plane_edge: edge_1_index,
@@ -503,7 +495,7 @@ impl CollisionManager {
 		edge_indices = EdgeIndices {
 		    plane_rigid_body: rigid_body_2_index,
 		    plane_edge: edge_2_index,
-		    plane_position: edges_2[edge_2_index].start_index(),
+		    plane_position: edge_2.start_index(),
 		    other_rigid_body: rigid_body_1_index,
 		    other_edge: edge_1_index,
 		};
@@ -737,7 +729,7 @@ impl CollisionManager {
 	}
     }
 
-    fn contact_forces_simple(contacts: &Contacts, rigid_bodies: &mut [RigidBody]) {
+    fn contact_forces_simple(contacts: &[Contact], rigid_bodies: &mut [RigidBody]) {
 	for contact in contacts {
 	    Self::contact_force(contact, rigid_bodies);
 	}

@@ -250,7 +250,7 @@ pub fn regular_icosahedron(
 	    &Vector3d::new(0., 1., 0.),	
 	)?,
  	RenderOption::Mesh {
-	    mesh: mesh,
+	    mesh,
 	    color: Color::rgb(0, 255, 0),
 	},
     );

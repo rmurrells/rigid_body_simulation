@@ -5,15 +5,14 @@ use crate::math::{
 use super::rigid_body::RigidBody;
 use std::mem;
 
+#[derive(Default)]
 pub struct CollisionTable {
     data: Vec<Vec<CollisionStatus>>,
 }
 
 impl CollisionTable {
     pub fn new() -> Self {
-	Self {
-	    data: Vec::new(),
-	}
+	Self::default()
     }
 
     pub fn reset_colliding(&mut self) {
