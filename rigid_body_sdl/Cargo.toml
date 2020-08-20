@@ -14,3 +14,6 @@ criterion = "0.3"
 [[bench]]
 name = "default_benchmark"
 harness = false
+
+[features]
+use_sdl2_mac_framework = ["sdl2/use_mac_framework"]
