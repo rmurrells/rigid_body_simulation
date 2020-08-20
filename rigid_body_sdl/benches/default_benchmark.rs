@@ -11,7 +11,7 @@ use rigid_body_sdl::{
 use std::time::Duration;
 
 fn criterion_benchmark(c: &mut Criterion) {
-    let mut rigid_body = RigidBodySimulationSDL::new((800, 600)).unwrap();
+    let mut rigid_body = RigidBodySimulationSDL::new((1920, 1080)).unwrap();
     rigid_body.set_fps(0);
     config::default(8, &mut rigid_body).unwrap();
     

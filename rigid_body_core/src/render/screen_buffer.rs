@@ -14,15 +14,11 @@ pub struct Color {
     pub r: u8,
     pub g: u8,
     pub b: u8,
-    pub a: u8,
 }
 
 impl Color {
     pub fn rgb(r: u8, g: u8, b: u8) -> Self {
-	Self{r, g, b, a: 255}
-    }
-    pub fn rgba(r: u8, g: u8, b: u8, a: u8) -> Self {
-	Self{r, g, b, a}
+	Self{r, g, b}
     }
 }
 
@@ -37,7 +33,7 @@ impl ScreenBuffer {
 	let window_len = (window_size.0*window_size.1) as usize;
 	Self {
 	    window_size,
-	    data: vec![0; window_len*PIXEL_FORMAT],
+	    data: vec![255; window_len*PIXEL_FORMAT],
 	    depth: vec![0.; window_len],
 	}
     }
@@ -245,10 +241,11 @@ impl ScreenBuffer {
     
     fn fill_pixel(&mut self, mut index: usize, color: Color) {
 	index *= PIXEL_FORMAT;
-	self.data[index] = color.r;
-	self.data[index+1] = color.g;
-	self.data[index+2] = color.b;
-	self.data[index+3] = color.a;
+	unsafe {
+	    *self.data.get_unchecked_mut(index) = color.r;
+	    *self.data.get_unchecked_mut(index+1) = color.g;
+	    *self.data.get_unchecked_mut(index+2) = color.b;
+	}
     }
     
     fn get_y_sorted_vertices(
