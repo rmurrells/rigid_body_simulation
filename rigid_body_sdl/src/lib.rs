@@ -1,22 +1,15 @@
-pub mod render;
 mod input;
+pub mod render;
 
-pub use rigid_body_core::{
-    config,
-    input::camera_mover::{
-	CameraMode,
-	CameraMover,
-    },
-    math,
-    mesh,
-    rigid_body,
-    RigidBodySimulationTrait,
-};
 use input::InputSDL;
 use render::RendererSDL;
+pub use rigid_body_core::{
+    config,
+    input::camera_mover::{CameraMode, CameraMover},
+    math, mesh, rigid_body, RigidBodySimulationTrait,
+};
 use rigid_body_core::{
-    render::ScreenBufferTrait,
-    RigidBodySimulationCore,
+    render::ScreenBufferTrait, RigidBodySimulationCore,
     RigidBodySimulationCoreAccess,
 };
 use sdl2::Sdl;
@@ -32,45 +25,51 @@ pub struct RigidBodySimulationSDL {
 
 impl RigidBodySimulationSDL {
     pub fn new(window_size: (u32, u32)) -> StrResult<Self> {
-	let context = sdl2::init()?;
-	let mut ret = Self {
-	    rigid_body_simulation_core: RigidBodySimulationCore::new(
-		window_size,
-	    ),
-	    renderer: RendererSDL::new(
-		&context, "RigidBodySimulationSDL", window_size,
-	    )?,
-	    input: InputSDL::new(&context)?,
-	    _context: context,
-	};
-	ret.set_fps(60);
-	Ok(ret)
+        let context = sdl2::init()?;
+        let mut ret = Self {
+            rigid_body_simulation_core: RigidBodySimulationCore::new(
+                window_size,
+            ),
+            renderer: RendererSDL::new(
+                &context,
+                "RigidBodySimulationSDL",
+                window_size,
+            )?,
+            input: InputSDL::new(&context)?,
+            _context: context,
+        };
+        ret.set_fps(60);
+        Ok(ret)
     }
 
     pub fn set_window_size(
-	&mut self, window_size: (u32, u32),
+        &mut self,
+        window_size: (u32, u32),
     ) -> StrResult<()> {
-	self.renderer.set_window_size(window_size)
-	    .map_err(|e| e.to_string())?;
-	self.rigid_body_simulation_core.set_window_size(window_size);
-	Ok(())
+        self.renderer
+            .set_window_size(window_size)
+            .map_err(|e| e.to_string())?;
+        self.rigid_body_simulation_core.set_window_size(window_size);
+        Ok(())
     }
-    
+
     pub fn tick(&mut self) -> StrResult<bool> {
-	self.input.get(&mut self.rigid_body_simulation_core.input);
-	if !self.rigid_body_simulation_core.tick() {return Ok(false);}
-	self.renderer.present(
-	    self.rigid_body_simulation_core.renderer.pixel_buffer_mut(),
-	)?;
-	Ok(true)
+        self.input.get(&mut self.rigid_body_simulation_core.input);
+        if !self.rigid_body_simulation_core.tick() {
+            return Ok(false);
+        }
+        self.renderer.present(
+            self.rigid_body_simulation_core.renderer.pixel_buffer_mut(),
+        )?;
+        Ok(true)
     }
 }
 
 impl RigidBodySimulationCoreAccess for RigidBodySimulationSDL {
     fn rigid_body_simulation_core_access(
-	&mut self,
+        &mut self,
     ) -> &mut RigidBodySimulationCore {
-	&mut self.rigid_body_simulation_core
+        &mut self.rigid_body_simulation_core
     }
 }
 impl RigidBodySimulationTrait for RigidBodySimulationSDL {}

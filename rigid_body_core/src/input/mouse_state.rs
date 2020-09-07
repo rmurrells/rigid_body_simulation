@@ -11,9 +11,9 @@ pub struct MouseState {
 
 impl MouseState {
     pub fn reset(&mut self) {
-	self.xrel = 0;
-	self.yrel = 0;
-	self.wheel_y = 0;
+        self.xrel = 0;
+        self.yrel = 0;
+        self.wheel_y = 0;
     }
 
     pub fn set(&mut self, button: MouseButton, pressed: bool) {
