@@ -28,6 +28,7 @@ impl RendererSDL {
         let window = video
             .window(window_name, window_size.0, window_size.1)
             .position_centered()
+	    .allow_highdpi()
             .build()
             .map_err(|e| e.to_string())?;
         let canvas = window.into_canvas().build().map_err(|e| e.to_string())?;
