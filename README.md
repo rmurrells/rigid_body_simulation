@@ -4,13 +4,13 @@ A simple 3D rigid body simulation for various polyhedrons written in Rust. Curre
 
 # Installation
 
-Works with the latest Rust version.
-
 ## SDL
 
 ### Mac OS X
 
-### Windows
+### Windows (MSVC)
+
+
 
 ## WebAssembly
 

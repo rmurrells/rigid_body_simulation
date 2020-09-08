@@ -16,4 +16,5 @@ name = "default_benchmark"
 harness = false
 
 [features]
+default = ["sdl2/bundled"]
 use_sdl2_mac_framework = ["sdl2/use_mac_framework"]
