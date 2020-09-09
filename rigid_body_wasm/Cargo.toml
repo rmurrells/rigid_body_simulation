@@ -17,6 +17,3 @@ rigid_body_core = {path = "../rigid_body_core"}
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.17"
-
-#[profile.release]
-#opt-level = 3
