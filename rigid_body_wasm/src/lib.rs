@@ -88,7 +88,7 @@ pub fn init(width: u32, height: u32, n: usize) -> RigidBodySimulationWAsm {
     set_panic_hook();
     let mut ret = RigidBodySimulationWAsm::new(width, height);
     ret.camera_mover_mut().mode = CameraMode::Rel;
-    ret.camera_mover_mut().wheel_scale = 2.;
+    ret.camera_mover_mut().wheel_scale = 1.5;
     config::default(n, &mut ret).expect("config::default");
     ret
 }

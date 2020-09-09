@@ -34,7 +34,6 @@ pub struct RigidBodySimulationCore {
     pub input: InputCore,
     pub camera_mover: CameraMover,
     pub renderer: RendererCore,
-    pub debug: bool,
     simulation: Simulation,
     fps_manager_opt: Option<FPSManager>,
 }
@@ -44,7 +43,6 @@ impl RigidBodySimulationCore {
         Self {
             input: InputCore::default(),
             renderer: RendererCore::new(window_size),
-            debug: false,
             simulation: Simulation::default(),
             camera_mover: CameraMover {
                 center: Vector3d::default(),
@@ -72,6 +70,7 @@ impl RigidBodySimulationCore {
     }
 
     fn handle_input(&mut self) {
+        self.set_debug(self.input.debug);
         self.camera_mover
             .move_camera(&self.input, self.renderer.camera_mut());
         if self.input.reset {
@@ -91,11 +90,7 @@ impl RigidBodySimulationCore {
 
     fn render(&mut self) {
         self.renderer.clear(Color::rgb(0, 0, 0));
-        if self.debug {
-            self.renderer.render_simulation_debug(&self.simulation);
-        } else {
-            self.renderer.render_simulation(&self.simulation);
-        }
+        self.renderer.render_simulation(&self.simulation);
     }
 }
 
@@ -152,14 +147,10 @@ pub trait RigidBodySimulationTrait: RigidBodySimulationCoreAccess {
         }
     }
 
-    fn set_render_debug(&mut self, set: bool) {
-        self.rigid_body_simulation_core_access().debug = set;
-    }
-
-    fn set_simulation_debug(&mut self, set: bool) {
-        self.rigid_body_simulation_core_access()
-            .simulation
-            .set_debug(set);
+    fn set_debug(&mut self, set: bool) {
+        let core = self.rigid_body_simulation_core_access();
+        core.simulation.set_debug(set);
+        core.renderer.set_debug(set);
     }
 
     fn set_fps(&mut self, fps: u64) {

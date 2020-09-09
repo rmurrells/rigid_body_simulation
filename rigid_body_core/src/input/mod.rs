@@ -9,6 +9,7 @@ pub struct InputCore {
     pub keyboard_state: KeyboardState,
     pub mouse_state: MouseState,
     pub advance_simulation: bool,
+    pub debug: bool,
     pub reset: bool,
     pub tick: bool,
     pub quit: bool,
@@ -20,6 +21,7 @@ impl InputCore {
             keyboard_state: KeyboardState::default(),
             mouse_state: MouseState::default(),
             advance_simulation: true,
+            debug: false,
             reset: false,
             tick: false,
             quit: false,
@@ -60,6 +62,7 @@ impl InputCore {
         if self.keyboard_state.get(key) {
             match key {
                 Keycode::Escape => self.quit = true,
+                Keycode::Z => self.debug = !self.debug,
                 Keycode::R => self.reset = true,
                 Keycode::Return => self.tick = true,
                 Keycode::Space => {

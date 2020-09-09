@@ -70,8 +70,10 @@ impl InputSDL {
             keyboard::Keycode::R => Some(keyboard_state::Keycode::R),
             keyboard::Keycode::S => Some(keyboard_state::Keycode::S),
             keyboard::Keycode::W => Some(keyboard_state::Keycode::W),
+            keyboard::Keycode::Z => Some(keyboard_state::Keycode::Z),
             keyboard::Keycode::Return => Some(keyboard_state::Keycode::Return),
             keyboard::Keycode::Space => Some(keyboard_state::Keycode::Space),
+            keyboard::Keycode::Tab => Some(keyboard_state::Keycode::Tab),
             keyboard::Keycode::Escape => Some(keyboard_state::Keycode::Escape),
             _ => None,
         }

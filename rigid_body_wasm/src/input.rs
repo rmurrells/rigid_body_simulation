@@ -11,6 +11,8 @@ pub fn key(key: u32, down: bool, input_core: &mut InputCore) {
         82 => Some(keyboard_state::Keycode::R),
         83 => Some(keyboard_state::Keycode::S),
         87 => Some(keyboard_state::Keycode::W),
+        90 => Some(keyboard_state::Keycode::Z),
+        9 => Some(keyboard_state::Keycode::Tab),
         13 => Some(keyboard_state::Keycode::Return),
         32 => Some(keyboard_state::Keycode::Space),
         27 => Some(keyboard_state::Keycode::Escape),

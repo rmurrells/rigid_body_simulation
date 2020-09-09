@@ -47,6 +47,7 @@ pub enum RenderOption {
 pub struct RendererCore {
     draw_3d: Draw3d,
     render_map: RenderMap,
+    debug: bool,
 }
 
 impl RendererCore {
@@ -54,149 +55,7 @@ impl RendererCore {
         Self {
             draw_3d: Draw3d::new(window_size),
             render_map: RenderMap::default(),
-        }
-    }
-
-    pub fn set_uid(&mut self, uid: UID, render_option: RenderOption) {
-        self.render_map.insert(uid, render_option);
-    }
-
-    pub fn render_simulation(&mut self, simulation: &Simulation) {
-        for rigid_body in simulation.rigid_bodies().iter() {
-            self.draw_rigid_body(rigid_body, &None);
-        }
-        let bounding_box = simulation.bounding_box();
-        if bounding_box.inner_opt.is_some() {
-            self.draw_bounding_box(bounding_box);
-        }
-    }
-
-    pub fn render_simulation_debug(&mut self, simulation: &Simulation) {
-        let rigid_bodies = simulation.rigid_bodies();
-        for (i, rigid_body) in rigid_bodies.iter().enumerate() {
-            self.draw_rigid_body(
-                rigid_body,
-                &Some(if simulation.collision_manager.is_colliding(i) {
-                    Color::rgb(255, 0, 0)
-                } else {
-                    Color::rgb(0, 255, 0)
-                }),
-            );
-            let bounding_box = rigid_body.bounding_box();
-            self.draw_aligned_cuboid(
-                &bounding_box[0],
-                &bounding_box[1],
-                if simulation.collision_manager.is_bounding_box_colliding(i) {
-                    Color::rgb(0, 0, 255)
-                } else {
-                    Color::rgb(0, 255, 0)
-                },
-            );
-        }
-        for i in 1..rigid_bodies.len() {
-            for j in 0..i {
-                if rigid_bodies[i].is_immovable()
-                    && rigid_bodies[j].is_immovable()
-                {
-                    continue;
-                }
-                let collision_status =
-                    simulation.collision_manager.collision_table().get(i, j);
-                if collision_status.bounding_box_collision() {
-                    if !collision_status.colliding {
-                        match collision_status.separating_plane {
-                            SeparatingPlane::Face { face_indices } => {
-                                let polyhedron = rigid_bodies
-                                    [face_indices.face_rigid_body]
-                                    .polyhedron_world();
-                                Self::draw_face_edges(
-                                    polyhedron,
-                                    face_indices.face,
-                                    Color::rgb(255, 0, 0),
-                                    true,
-                                    &mut self.draw_3d,
-                                );
-                                let mut avg = Vector3d::default();
-                                let vertices = polyhedron.vertices();
-                                let separating_face =
-                                    &polyhedron.faces()[face_indices.face];
-                                let vertex_indices =
-                                    separating_face.vertex_indices();
-                                for vertex_index in vertex_indices {
-                                    avg.add_assign(&vertices[*vertex_index]);
-                                }
-                                avg.scale_assign(
-                                    1. / vertex_indices.len() as f64,
-                                );
-                                self.draw_line(
-                                    &avg,
-                                    &avg.add(separating_face.direction()),
-                                    Color::rgb(255, 255, 255),
-                                    true,
-                                );
-                            }
-                            SeparatingPlane::Edge { edge_indices } => {
-                                let plane_polyhedron = rigid_bodies
-                                    [edge_indices.plane_rigid_body]
-                                    .polyhedron_world();
-                                let plane_vertices =
-                                    plane_polyhedron.vertices();
-                                let plane_edge = plane_polyhedron.edges()
-                                    [edge_indices.plane_edge];
-
-                                let other_polyhedron = rigid_bodies
-                                    [edge_indices.other_rigid_body]
-                                    .polyhedron_world();
-                                let other_vertices =
-                                    other_polyhedron.vertices();
-                                let other_edge = other_polyhedron.edges()
-                                    [edge_indices.other_edge];
-
-                                self.draw_edge_plane(
-                                    &plane_vertices[plane_edge.start_index()],
-                                    &plane_vertices[plane_edge.end_index()],
-                                    &edge_indices
-                                        .plane_direction(rigid_bodies)
-                                        .unwrap(),
-                                    &other_vertices[other_edge.start_index()],
-                                    &other_vertices[other_edge.end_index()],
-                                );
-
-                                self.draw_line(
-                                    &other_vertices[other_edge.start_index()],
-                                    &other_vertices[other_edge.end_index()],
-                                    Color::rgb(255, 0, 0),
-                                    true,
-                                );
-                            }
-                            SeparatingPlane::None => unreachable!(),
-                        }
-                    } else {
-                        for contact in &collision_status.contacts {
-                            match contact {
-                                Contact::VertexFace {
-                                    vertex_face_indices,
-                                } => {
-                                    self.draw_position(
-                                        &rigid_bodies[vertex_face_indices
-                                            .vertex_rigid_body]
-                                            .polyhedron_world()
-                                            .vertices()
-                                            [vertex_face_indices.vertex],
-                                        Color::rgb(255, 255, 0),
-                                    );
-                                }
-                                Contact::EdgeEdge { edge_edge_indices } => {
-                                    self.draw_position(
-                                        &edge_edge_indices.contact_position,
-                                        Color::rgb(0, 255, 255),
-                                    );
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            debug: false,
         }
     }
 
@@ -224,6 +83,22 @@ impl RendererCore {
             &self.render_map,
             &mut self.draw_3d,
         );
+    }
+
+    pub fn render_simulation(&mut self, simulation: &Simulation) {
+        if self.debug {
+            self.render_simulation_impl_debug(simulation);
+        } else {
+            self.render_simulation_impl(simulation);
+        }
+    }
+
+    pub fn set_debug(&mut self, set: bool) {
+        self.debug = set;
+    }
+
+    pub fn set_uid(&mut self, uid: UID, render_option: RenderOption) {
+        self.render_map.insert(uid, render_option);
     }
 
     fn draw_bounding_box(&mut self, bounding_box: &BoundingBox) {
@@ -449,6 +324,145 @@ impl RendererCore {
             },
             None => {
                 Self::draw_rigid_body_default(rigid_body, color_opt, draw_3d)
+            }
+        }
+    }
+
+    fn render_simulation_impl(&mut self, simulation: &Simulation) {
+        for rigid_body in simulation.rigid_bodies().iter() {
+            self.draw_rigid_body(rigid_body, &None);
+        }
+        let bounding_box = simulation.bounding_box();
+        if bounding_box.inner_opt.is_some() {
+            self.draw_bounding_box(bounding_box);
+        }
+    }
+
+    fn render_simulation_impl_debug(&mut self, simulation: &Simulation) {
+        let rigid_bodies = simulation.rigid_bodies();
+        for (i, rigid_body) in rigid_bodies.iter().enumerate() {
+            self.draw_rigid_body(
+                rigid_body,
+                &Some(if simulation.collision_manager.is_colliding(i) {
+                    Color::rgb(255, 0, 0)
+                } else {
+                    Color::rgb(0, 255, 0)
+                }),
+            );
+            let bounding_box = rigid_body.bounding_box();
+            self.draw_aligned_cuboid(
+                &bounding_box[0],
+                &bounding_box[1],
+                if simulation.collision_manager.is_bounding_box_colliding(i) {
+                    Color::rgb(0, 0, 255)
+                } else {
+                    Color::rgb(0, 255, 0)
+                },
+            );
+        }
+        for i in 1..rigid_bodies.len() {
+            for j in 0..i {
+                if rigid_bodies[i].is_immovable()
+                    && rigid_bodies[j].is_immovable()
+                {
+                    continue;
+                }
+                let collision_status =
+                    simulation.collision_manager.collision_table().get(i, j);
+                if collision_status.bounding_box_collision() {
+                    if !collision_status.colliding {
+                        match collision_status.separating_plane {
+                            SeparatingPlane::Face { face_indices } => {
+                                let polyhedron = rigid_bodies
+                                    [face_indices.face_rigid_body]
+                                    .polyhedron_world();
+                                Self::draw_face_edges(
+                                    polyhedron,
+                                    face_indices.face,
+                                    Color::rgb(255, 0, 0),
+                                    true,
+                                    &mut self.draw_3d,
+                                );
+                                let mut avg = Vector3d::default();
+                                let vertices = polyhedron.vertices();
+                                let separating_face =
+                                    &polyhedron.faces()[face_indices.face];
+                                let vertex_indices =
+                                    separating_face.vertex_indices();
+                                for vertex_index in vertex_indices {
+                                    avg.add_assign(&vertices[*vertex_index]);
+                                }
+                                avg.scale_assign(
+                                    1. / vertex_indices.len() as f64,
+                                );
+                                self.draw_line(
+                                    &avg,
+                                    &avg.add(separating_face.direction()),
+                                    Color::rgb(255, 255, 255),
+                                    true,
+                                );
+                            }
+                            SeparatingPlane::Edge { edge_indices } => {
+                                let plane_polyhedron = rigid_bodies
+                                    [edge_indices.plane_rigid_body]
+                                    .polyhedron_world();
+                                let plane_vertices =
+                                    plane_polyhedron.vertices();
+                                let plane_edge = plane_polyhedron.edges()
+                                    [edge_indices.plane_edge];
+
+                                let other_polyhedron = rigid_bodies
+                                    [edge_indices.other_rigid_body]
+                                    .polyhedron_world();
+                                let other_vertices =
+                                    other_polyhedron.vertices();
+                                let other_edge = other_polyhedron.edges()
+                                    [edge_indices.other_edge];
+
+                                self.draw_edge_plane(
+                                    &plane_vertices[plane_edge.start_index()],
+                                    &plane_vertices[plane_edge.end_index()],
+                                    &edge_indices
+                                        .plane_direction(rigid_bodies)
+                                        .unwrap(),
+                                    &other_vertices[other_edge.start_index()],
+                                    &other_vertices[other_edge.end_index()],
+                                );
+
+                                self.draw_line(
+                                    &other_vertices[other_edge.start_index()],
+                                    &other_vertices[other_edge.end_index()],
+                                    Color::rgb(255, 0, 0),
+                                    true,
+                                );
+                            }
+                            SeparatingPlane::None => unreachable!(),
+                        }
+                    } else {
+                        for contact in &collision_status.contacts {
+                            match contact {
+                                Contact::VertexFace {
+                                    vertex_face_indices,
+                                } => {
+                                    self.draw_position(
+                                        &rigid_bodies[vertex_face_indices
+                                            .vertex_rigid_body]
+                                            .polyhedron_world()
+                                            .vertices()
+                                            [vertex_face_indices.vertex],
+                                        Color::rgb(255, 255, 0),
+                                    );
+                                }
+                                Contact::EdgeEdge { edge_edge_indices } => {
+                                    self.draw_position(
+                                        &edge_edge_indices.contact_position,
+                                        Color::rgb(0, 255, 255),
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

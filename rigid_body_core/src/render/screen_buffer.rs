@@ -214,8 +214,8 @@ impl ScreenBuffer {
     fn fill_pixel(&mut self, mut index: usize, color: Color) {
         index *= PIXEL_FORMAT;
         self.data[index] = color.r;
-        self.data[index+1] = color.g;
-        self.data[index+2] = color.b;
+        self.data[index + 1] = color.g;
+        self.data[index + 2] = color.b;
     }
 
     fn get_y_sorted_vertices(

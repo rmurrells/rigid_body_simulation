@@ -23,7 +23,7 @@ pub struct CollisionManager {
 impl CollisionManager {
     pub fn new() -> Self {
         Self {
-            debug: true,
+            debug: false,
             bounding_box_collision_manager: BoundingBoxCollisionManager::new(
                 COLLISION_EPSILON,
             ),
