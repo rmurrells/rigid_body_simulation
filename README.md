@@ -4,13 +4,13 @@ A simple 3D rigid body simulation for various polyhedrons written in Rust. Curre
 
 # How to use
 
-Both implementations require [the standard Rust toolchain][https://www.rust-lang.org/tools/install].
+Both implementations require [the standard Rust toolchain](https://www.rust-lang.org/tools/install).
 
 ## SDL
 
 Opens the simulation in a window.
 
-#####Requirements
+##### Requirements
 * an up to date C compiler
 
 Enter the rigid_body_sdl directory and run with:
@@ -26,15 +26,15 @@ If using Windows MSVC this command should be called from the appropriate native 
 
 Creates a web server from which the simulation can be viewed through a browser.
 
-#####Requirements
-* [npm][https://www.npmjs.com/get-npm]
-* [wasm-pack][https://rustwasm.github.io/wasm-pack/installer/]
+##### Requirements
+* [npm](https://www.npmjs.com/get-npm)
+* [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)
 
 Enter the rigid_body_wasm directory and run:
 ```
 wasm-pack build
-
 ```
+
 Enter the web directory and run:
 ```
 npm install
@@ -45,7 +45,11 @@ Start the web server from the web directory with:
 npm start
 ```
 
-Access the simulation locally by entering localhost:30000 into a browser address bar.
+Access the simulation locally by entering
+```
+localhost:30000
+```
+into a browser address bar.
 
 # Controls
 
@@ -53,4 +57,4 @@ Access the simulation locally by entering localhost:30000 into a browser address
 * Mouse scroll to zoom in and out
 * Space - pause
 * R - reset
-* Escape - Close the window (SDL only)
+* Escape - close the window (SDL only)
