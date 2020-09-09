@@ -10,7 +10,7 @@ Both implementations require [the standard Rust toolchain](https://www.rust-lang
 
 Opens the simulation in a window.
 
-##### Requirements
+#### Requirements
 * an up to date C compiler
 
 Enter the rigid_body_sdl directory and run with:
@@ -26,7 +26,7 @@ If using Windows MSVC this command should be called from the appropriate native 
 
 Creates a web server from which the simulation can be viewed through a browser.
 
-##### Requirements
+#### Requirements
 * [npm](https://www.npmjs.com/get-npm)
 * [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)
 
