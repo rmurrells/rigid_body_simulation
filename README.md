@@ -58,3 +58,4 @@ into a browser address bar.
 * Space - pause
 * R - reset
 * Escape - close the window (SDL only)
+* Z - debug
