@@ -2,7 +2,7 @@
 
 A simple 3D rigid body simulation for various polyhedrons written in Rust. Currently implemented in SDL and WebAssembly.
 
-# How to use
+# Instructions
 
 Both implementations require [the standard Rust toolchain](https://www.rust-lang.org/tools/install).
 
