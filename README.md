@@ -1,6 +1,6 @@
 # Rigid Body Simulation
 
-A simple 3D rigid body simulation for various polyhedrons written in Rust. Currently implemented in SDL and WebAssembly.
+A simple 3D rigid body simulation for various polyhedrons written in Rust. Implemented in SDL and WebAssembly.
 
 # Instructions
 
