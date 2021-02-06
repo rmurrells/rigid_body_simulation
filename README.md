@@ -4,7 +4,7 @@ A simple 3D rigid body simulation for various polyhedrons written in Rust. Imple
 
 # Instructions
 
-Both implementations require [the standard Rust toolchain](https://www.rust-lang.org/tools/install).
+Both implementations require the [standard Rust toolchain](https://www.rust-lang.org/tools/install).
 
 ## SDL
 
@@ -58,4 +58,4 @@ into a browser address bar.
 * Space - pause
 * R - reset
 * Escape - close the window (SDL only)
-* Z - debug
+* Z - debug display mode 
