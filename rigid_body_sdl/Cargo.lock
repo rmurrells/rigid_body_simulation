@@ -474,7 +474,6 @@ dependencies = [
  "criterion",
  "rigid_body_core",
  "sdl2",
- "sdl2-sys",
 ]
 
 [[package]]
