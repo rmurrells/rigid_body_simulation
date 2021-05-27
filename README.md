@@ -12,6 +12,7 @@ Opens the simulation in a window.
 
 #### Requirements
 * an up to date C compiler
+* [cmake](https://cmake.org)
 
 Enter the rigid_body_sdl directory and run with:
 ```
