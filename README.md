@@ -19,10 +19,6 @@ Enter the rigid_body_sdl directory and run with:
 cargo run --release
 ```
 
-If using Windows MSVC this command should be called from the appropriate native tools command prompt:
-* x86 Native Tools Command Prompt for 32-bit architecture
-* x64 Native Tools Command prompt for 64-bit architecture
-
 ## WebAssembly
 
 Creates a web server from which the simulation can be viewed through a browser.
