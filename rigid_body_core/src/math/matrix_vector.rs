@@ -6,11 +6,11 @@ use super::{
 
 macro_rules! get_mat_value {
     ($mat:ident, $i:ident, $j:ident, nottranspose) => {
-        $mat[$i][$j];
+        $mat[$i][$j]
     };
 
     ($mat:ident, $i:ident, $j:ident, transpose) => {
-        $mat[$j][$i];
+        $mat[$j][$i]
     };
 }
 

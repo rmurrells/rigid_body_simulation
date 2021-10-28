@@ -8,11 +8,11 @@ use std::{
 
 macro_rules! get_mat_value {
     ($mat:ident, $k:ident, $j:ident, nottranspose) => {
-        $mat[$k][$j];
+        $mat[$k][$j]
     };
 
     ($mat:ident, $k:ident, $j:ident, transpose) => {
-        $mat[$j][$k];
+        $mat[$j][$k]
     };
 }
 
